@@ -2,8 +2,8 @@
 [project]
 # ── generated from haybale.toml at publish; hand-edits are reported as drift ─
 name = "haybale-speech"  # from haybale.name
-description = "Local library for haybale-speech project"  # from haybale.description
-keywords = ["experimental", "project-local"]  # from haybale.tags
+description = "Speech-to-text for audio clips, with faster-whisper"  # from haybale.description
+keywords = ["audio", "speech", "stt", "models"]  # from haybale.tags
 
 # CANON, but owned by the release machinery — synced to haybale.toml
 version = "0.0.1"
