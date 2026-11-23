@@ -1,0 +1,35 @@
+{
+    "name": "Whisper small",
+    "author": "OpenAI (CTranslate2 conversion by Systran)",
+    "license": "MIT",
+    "commercial": true,
+    "recommended": true,
+    "tags": [
+        "speech-to-text",
+        "whisper",
+        "multilingual"
+    ],
+    "description": "[Whisper](https://github.com/openai/whisper) `small` (244 M parameters, 99 languages), converted to CTranslate2 for [faster-whisper](https://github.com/SYSTRAN/faster-whisper) by Systran. The weights are float16; Load STT Model runs them in int8 on the CPU and float16 on a GPU.",
+    "date": "2022-09-21",
+    "architecture": "whisper",
+    "purpose": ["stt"],
+    "size": ["244M"],
+    "resources": [
+        {
+            "platform": "ctranslate2",
+            "type": "ctranslate2",
+            "backend": "faster-whisper",
+            "precision": "fp16",
+            "size": 486212372,
+            "urls": [
+                "hf://Systran/faster-whisper-small@536b0662742c02347bc0e980a01041f333bce120"
+            ],
+            "include": [
+                "config.json",
+                "model.bin",
+                "tokenizer.json",
+                "vocabulary.txt"
+            ]
+        }
+    ]
+}

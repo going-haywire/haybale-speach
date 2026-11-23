@@ -1,18 +1,10 @@
-"""
-Local haybale library for the haybale-speech project.
+"""Haybale-Speech: speech-to-text for audio clips.
 
-Add your custom components in the corresponding folders:
-- nodes/      — node definitions
-- macros/     — macro documents (.hwm)
-- types/      — custom data types
-- widgets/    — UI widgets for data types
-- skins/      — custom node skins
-- adapters/   — type-to-type conversion adapters
-- settings/   — library settings definitions
-- states/     — library app and session states
-- themes/     — workbench and node themes
-- panels/     — custom UI panels
-- editors/    — custom UI editors
+Component folders (registered in ``register_components``):
+  - ``settings``, ``types``, ``nodes``, ``catalog`` and the scaffold's other folders.
+
+``runtime`` holds the faster-whisper code the nodes call; it loads the engine only when a
+model runs.
 """
 
 from pathlib import Path
@@ -20,6 +12,7 @@ from pathlib import Path
 from haywire.api import (
     AdapterRegistry,
     BaseLibrary,
+    CatalogRegistry,
     MacroRegistry,
     NodeRegistry,
     SettingsRegistry,
@@ -36,7 +29,7 @@ from haywire.api.workbench import EditorRegistry, StateRegistry, PanelRegistry
     file_watcher=True,
 )
 class Library(BaseLibrary):
-    """Local project library — add your components in the subfolders."""
+    """Speech library — load speech models and turn audio clips into text."""
 
     def register_components(self):
         """Register all components with the global registries."""
@@ -85,6 +78,11 @@ class Library(BaseLibrary):
         self.add_folder_to_registry(
             folder_path=str(base_path / "macros"),
             registry_cls=MacroRegistry,
+        )
+
+        self.add_folder_to_registry(
+            folder_path=str(base_path / "catalog"),
+            registry_cls=CatalogRegistry,
         )
 
         self.add_folder_to_registry(
