@@ -20,6 +20,7 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "numpy",
     "samplerate>=0.2.4",
+    "ctranslate2",
 ]
 
 # The key is the entry-point name (unique within the group; need not match the

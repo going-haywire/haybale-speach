@@ -783,6 +783,7 @@ name = "haybale-speech"
 version = "0.0.1"
 source = { editable = "barn/haybale-speech" }
 dependencies = [
+    { name = "ctranslate2" },
     { name = "faster-whisper" },
     { name = "haybale-audio" },
     { name = "haybale-models" },
@@ -793,6 +794,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ctranslate2" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "haybale-audio", editable = "../haywire-repo/barn/haybale-audio" },
     { name = "haybale-models", editable = "../haywire-repo/barn/haybale-models" },
