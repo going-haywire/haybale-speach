@@ -1,6 +1,6 @@
-# Haybale Speach
+# Haybale Speech
 
-A haywire project (`haybale-speach`): one haybale library under `barn/`, released with `haywire share`.
+A haywire project (`haybale-speech`): one haybale library under `barn/`, released with `haywire share`.
 
 ## Releases
 

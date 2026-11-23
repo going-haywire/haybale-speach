@@ -3,15 +3,15 @@
 # reference: docs/reference/files/haybale-toml.md
 
 # ── identity — immutable ──────────────────────────────────────────────────
-name = "haybale-speach"  # pip distribution name; also prefixes every
-# component's registry key, e.g. haybale-speach:node:Add
+name = "haybale-speech"  # pip distribution name; also prefixes every
+# component's registry key, e.g. haybale-speech:node:Add
 
 # ── written by scripts/bump_version.py / the share wizard, not by hand ──────
 version = "0.0.1"  # PEP 440, no "v" — canon here; pyproject.toml carries the synced copy
 
 # ── display ───────────────────────────────────────────────────────────────
-label = "Haybale Speach"  # human display name
-description = "Local library for haybale-speach project"  # one line
+label = "Haybale Speech"  # human display name
+description = "Local library for haybale-speech project"  # one line
 tags = ["experimental", "project-local"]  # filter tags in the library browser
 
 # ── behaviour ─────────────────────────────────────────────────────────────

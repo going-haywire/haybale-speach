@@ -10,8 +10,8 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "haybale-speach",
-    "haybale-speach-dev",
+    "haybale-speech",
+    "haybale-speech-dev",
 ]
 
 [[package]]
@@ -622,9 +622,9 @@ requires-dist = [
 ]
 
 [[package]]
-name = "haybale-speach"
+name = "haybale-speech"
 version = "0.0.1"
-source = { editable = "barn/haybale-speach" }
+source = { editable = "barn/haybale-speech" }
 dependencies = [
     { name = "haywire-core" },
 ]
@@ -633,7 +633,7 @@ dependencies = [
 requires-dist = [{ name = "haywire-core", editable = "../haywire-repo/packages/haywire-core" }]
 
 [[package]]
-name = "haybale-speach-dev"
+name = "haybale-speech-dev"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -641,7 +641,7 @@ dependencies = [
     { name = "haybale-graph-editor" },
     { name = "haybale-haystack" },
     { name = "haybale-marketplace" },
-    { name = "haybale-speach" },
+    { name = "haybale-speech" },
     { name = "haybale-studio" },
     { name = "haywire-studio" },
 ]
@@ -659,7 +659,7 @@ requires-dist = [
     { name = "haybale-graph-editor", editable = "../haywire-repo/barn/haybale-graph-editor" },
     { name = "haybale-haystack", editable = "../haywire-repo/barn/haybale-haystack" },
     { name = "haybale-marketplace", editable = "../haywire-repo/barn/haybale-marketplace" },
-    { name = "haybale-speach", editable = "barn/haybale-speach" },
+    { name = "haybale-speech", editable = "barn/haybale-speech" },
     { name = "haybale-studio", editable = "../haywire-repo/barn/haybale-studio" },
     { name = "haywire-studio", editable = "../haywire-repo/packages/haywire-studio" },
 ]

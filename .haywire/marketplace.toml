@@ -1,8 +1,8 @@
 [[heaps]]
-name = "haybale-speach"
-path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haybale-speach/barn/haybale-speach"
-label = "Haybale Speach"
-description = "Local library for the haybale-speach project"
+name = "haybale-speech"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haybale-speach/barn/haybale-speech"
+label = "Haybale Speech"
+description = "Local library for the haybale-speech project"
 
 [[heaps]]
 name = "haybale-TEST_A"
