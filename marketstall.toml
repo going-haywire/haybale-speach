@@ -1,0 +1,17 @@
+# marketstall.toml — share this file's raw URL so others can subscribe to your library feed
+# Run: haywire share   to update this file
+
+[[haybales]]
+name = "haybale-speech"
+label = "Speech"
+version = "0.0.1"
+require = "haywire-core>=0.6.1"
+description = "Speech-to-text for audio clips, with faster-whisper"
+source = "pypi"
+install_spec = "haybale-speech==0.0.1"
+tags = [ "audio", "speech", "stt", "models",]
+on_reload = "none"
+linked_libraries = [ "haybale_audio", "haybale_models",]
+origin = "https://github.com/going-haywire/haybale-speech"
+origin_provider = "github"
+
