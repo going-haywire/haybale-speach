@@ -1,6 +1,6 @@
-# Haybale Speach
+# Haybale Speech
 
-Local haybale library for the haybale-speach project.
+Local haybale library for the haybale-speech project.
 
 ## Subscribe
 

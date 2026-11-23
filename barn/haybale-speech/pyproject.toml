@@ -1,8 +1,8 @@
 # Full field reference: docs/reference/files/pyproject-toml.md
 [project]
 # ── generated from haybale.toml at publish; hand-edits are reported as drift ─
-name = "haybale-speach"  # from haybale.name
-description = "Local library for haybale-speach project"  # from haybale.description
+name = "haybale-speech"  # from haybale.name
+description = "Local library for haybale-speech project"  # from haybale.description
 keywords = ["experimental", "project-local"]  # from haybale.tags
 
 # CANON, but owned by the release machinery — synced to haybale.toml
@@ -18,7 +18,7 @@ dependencies = ["haywire-core>=0.6.1"]
 # The key is the entry-point name (unique within the group; need not match the
 # library id). The value is <module>:<class>.
 [project.entry-points."haywire.libraries"]
-haybale-speach = "haybale_speach:Library"
+speech = "haybale_speech:Library"
 
 [build-system]
 requires = ["hatchling"]
@@ -27,4 +27,4 @@ build-backend = "hatchling.build"
 # Declares the package DIRECTORY, so everything not VCS-ignored inside it
 # reaches the wheel, including haybale.toml — do not add include/exclude here.
 [tool.hatch.build.targets.wheel]
-packages = ["haybale_speach"]
+packages = ["haybale_speech"]

@@ -1,5 +1,5 @@
 """
-Local haybale library for the haybale-speach project.
+Local haybale library for the haybale-speech project.
 
 Add your custom components in the corresponding folders:
 - nodes/      — node definitions
