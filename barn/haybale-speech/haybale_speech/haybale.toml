@@ -10,9 +10,9 @@ name = "haybale-speech"  # pip distribution name; also prefixes every
 version = "0.0.1"  # PEP 440, no "v" — canon here; pyproject.toml carries the synced copy
 
 # ── display ───────────────────────────────────────────────────────────────
-label = "Haybale Speech"  # human display name
-description = "Local library for haybale-speech project"  # one line
-tags = ["experimental", "project-local"]  # filter tags in the library browser
+label = "Speech"  # human display name
+description = "Speech-to-text for audio clips, with faster-whisper"  # one line
+tags = ["audio", "speech", "stt", "models"]  # filter tags in the library browser
 
 # ── behaviour ─────────────────────────────────────────────────────────────
 # os = ["macos", "linux"]  # macos/linux/windows; empty/absent = every platform
@@ -20,7 +20,7 @@ tags = ["experimental", "project-local"]  # filter tags in the library browser
 
 # Sibling haybales this library subscribes to, as MODULE names (not
 # distribution names). Required for hot-reload scope tracking.
-linked_libraries = []
+linked_libraries = ["haybale_audio", "haybale_models"]
 
 # ── declared paths, relative to the project root ────────────────────────────
 # examples_path = "examples/"

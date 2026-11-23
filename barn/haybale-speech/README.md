@@ -1,9 +1,20 @@
-# Haybale Speech
-
-Local haybale library for the haybale-speech project.
-
-## Subscribe
+# Speech
 
 <!-- marketstall:share-url:start -->
 *Subscribe URL not yet published — push this repo to a git remote, then run `uv run --frozen haywire share --bump patch`.*
 <!-- marketstall:share-url:end -->
+
+Speech-to-text for audio clips, with faster-whisper
+
+## Nodes
+### Speech
+- **Collect Clip** — Gathers the audio blocks of a flow into one clip, sent on Stop
+- **Load STT Model** — Loads a speech-to-text model onto the CPU or GPU, for Transcribe
+- **Transcribe** — Turns the speech in an audio clip into text with a loaded model
+
+## Types
+- **STT Model** — A speech-to-text model loaded on a device, ready to run. Never saved with the graph.
+- **Transcript** — The text of a clip, with its language and timed segments. Never saved with the graph.
+
+## Settings
+- **Speech** — Device, compute type and threads for models

@@ -2,7 +2,7 @@
 name = "haybale-speech-dev"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = [ "haywire-studio>=0.6.1", "haybale-studio>=0.6.1", "haybale-marketplace>=0.6.1", "haybale-core>=0.6.1", "haybale-graph-editor>=0.6.1", "haybale-haystack>=0.6.1", "haybale-speech",]
+dependencies = [ "haywire-studio>=0.6.1", "haybale-studio>=0.6.1", "haybale-marketplace>=0.6.1", "haybale-core>=0.6.1", "haybale-graph-editor>=0.6.1", "haybale-haystack>=0.6.1", "haybale-audio>=0.6.1", "haybale-models>=0.6.1", "haybale-speech",]
 
 [dependency-groups]
 dev = ["pytest>=8", "pytest-timeout", "ruff==0.12.12"]
@@ -44,6 +44,14 @@ editable = true
 path = "../haywire-repo/barn/haybale-haystack"
 editable = true
 
+[tool.uv.sources.haybale-audio]
+path = "../haywire-repo/barn/haybale-audio"
+editable = true
+
+[tool.uv.sources.haybale-models]
+path = "../haywire-repo/barn/haybale-models"
+editable = true
+
 [tool.uv.sources.haybale-speech]
 workspace = true
 
@@ -67,6 +75,7 @@ testpaths = ["tests"]
 markers = [
     "unit: Unit tests (fast, isolated)",
     "integration: Integration tests (slower, full system)",
+    "slow: needs a real model (runs with SPEECH_MODEL_TESTS=1)",
 ]
 addopts = "-v --strict-markers --tb=short"
 timeout = 120
