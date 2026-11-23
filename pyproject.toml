@@ -1,0 +1,59 @@
+[project]
+name = "haybale-speach-dev"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [ "haywire-studio>=0.6.1", "haybale-studio>=0.6.1", "haybale-marketplace>=0.6.1", "haybale-core>=0.6.1", "haybale-graph-editor>=0.6.1", "haybale-haystack>=0.6.1", "haybale-speach",]
+
+[tool.uv.workspace]
+members = [ "barn/*",]
+
+[tool.ruff.lint]
+extend-select = [ "TID251", "TID252",]
+
+[tool.uv.sources.haybale-speach]
+workspace = true
+
+[tool.uv.sources.haywire-studio]
+path = "../haywire-repo/packages/haywire-studio"
+editable = true
+
+[tool.uv.sources.haywire-core]
+path = "../haywire-repo/packages/haywire-core"
+editable = true
+
+[tool.uv.sources.haybale-studio]
+path = "../haywire-repo/barn/haybale-studio"
+editable = true
+
+[tool.uv.sources.haybale-marketplace]
+path = "../haywire-repo/barn/haybale-marketplace"
+editable = true
+
+[tool.uv.sources.haybale-core]
+path = "../haywire-repo/barn/haybale-core"
+editable = true
+
+[tool.uv.sources.haybale-graph-editor]
+path = "../haywire-repo/barn/haybale-graph-editor"
+editable = true
+
+[tool.uv.sources.haybale-haystack]
+path = "../haywire-repo/barn/haybale-haystack"
+editable = true
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api."haywire.core"]
+msg = "Import from haywire.api or haywire.api.workbench; this module is internal and may change."
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api."haywire.ui"]
+msg = "Import from haywire.api or haywire.api.workbench; this module is internal and may change."
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api."haywire.barn"]
+msg = "Import from haywire.api or haywire.api.workbench; this module is internal and may change."
+
+[tool.haywire.agents]
+# The docs folder whose `serve: developer` pages the Farmhand bridge serves to agent
+# sessions here: core's, through the core clone beside this repository.
+developer-docs = "../haywire-repo/docs"

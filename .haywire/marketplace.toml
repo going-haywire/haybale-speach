@@ -1,0 +1,83 @@
+[[heaps]]
+name = "haybale-speach"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haybale-speach/barn/haybale-speach"
+label = "Haybale Speach"
+description = "Local library for the haybale-speach project"
+
+[[heaps]]
+name = "haybale-TEST_A"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-TEST_A"
+label = "Test A"
+description = "Test library A for demonstrating multi-library support"
+
+[[heaps]]
+name = "haybale-audio"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-audio"
+label = "Audio"
+description = "Audio blocks, events and routing shared by speech and streaming libraries"
+linked_libraries = [ "haybale-core",]
+
+[[heaps]]
+name = "haybale-core"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-core"
+label = "Core"
+description = "Fundamental components for haywire graphs"
+
+[[heaps]]
+name = "haybale-example"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-example"
+label = "Example"
+description = "Example library for demonstrating multi-library support"
+linked_libraries = [ "haybale-core", "haybale-models",]
+
+[[heaps]]
+name = "haybale-graph-editor"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-graph-editor"
+label = "Graph Editor"
+description = "Visual graph editor library — host-agnostic"
+
+[[heaps]]
+name = "haybale-haystack"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-haystack"
+label = "Haystack"
+description = "File-centric multi-graph manager"
+linked_libraries = [ "haybale-studio", "haybale-graph-editor",]
+
+[[heaps]]
+name = "haybale-image"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-image"
+label = "Image"
+description = "Image types, IO and viewers shared by vision and ML libraries"
+
+[[heaps]]
+name = "haybale-marketplace"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-marketplace"
+label = "Marketplace"
+description = "Library installer + browser editors"
+
+[[heaps]]
+name = "haybale-models"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-models"
+label = "Models"
+description = "Model references, local model store, downloads and graph needs-list"
+linked_libraries = [ "haybale-graph-editor",]
+
+[[heaps]]
+name = "haybale-share"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-share"
+label = "Share"
+description = "Publish this project: dependencies, version, docs, commit, tag, push"
+
+[[heaps]]
+name = "haybale-studio"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-studio"
+label = "Studio"
+description = "Library for haywire studio"
+
+[[heaps]]
+name = "haybale-testing"
+path = "/Volumes/Ddrive/06_open_tracking_tool/haywire/haywire-repo/barn/haybale-testing"
+label = "Testing"
+description = "Testing library for Haywire node system"
+linked_libraries = [ "haybale-core", "haybale-graph-editor",]
+
