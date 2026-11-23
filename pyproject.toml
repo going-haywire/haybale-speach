@@ -4,8 +4,14 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [ "haywire-studio>=0.6.1", "haybale-studio>=0.6.1", "haybale-marketplace>=0.6.1", "haybale-core>=0.6.1", "haybale-graph-editor>=0.6.1", "haybale-haystack>=0.6.1", "haybale-speach",]
 
+[dependency-groups]
+dev = ["pytest>=8", "pytest-timeout", "ruff==0.12.12"]
+
 [tool.uv.workspace]
 members = [ "barn/*",]
+
+[tool.ruff]
+line-length = 109
 
 [tool.ruff.lint]
 extend-select = [ "TID251", "TID252",]
@@ -52,6 +58,18 @@ msg = "Import from haywire.api or haywire.api.workbench; this module is internal
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api."haywire.barn"]
 msg = "Import from haywire.api or haywire.api.workbench; this module is internal and may change."
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["TID251"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (slower, full system)",
+]
+addopts = "-v --strict-markers --tb=short"
+timeout = 120
 
 [tool.haywire.agents]
 # The docs folder whose `serve: developer` pages the Farmhand bridge serves to agent
