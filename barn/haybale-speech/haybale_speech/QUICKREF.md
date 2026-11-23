@@ -11,3 +11,6 @@
 
 ## setting
 - `haybale-speech:setting:SpeechSettings` — Speech — Device, compute type and threads for models
+
+## panel
+- `haybale-speech:panel:SpeechSettingsPanel` — Speech — Device, compute type and threads for speech models.

@@ -41,3 +41,8 @@ def test_the_catalog_offers_whisper_small_pinned_and_commercial(library_system: 
     repo, _, commit = url.partition("@")
     assert repo == "hf://Systran/faster-whisper-small"
     assert len(commit) == 40  # a whole-repo address is pinned by its commit
+
+
+def test_the_speech_settings_have_a_panel(library_system: Any) -> None:
+    registry = library_system.get_panel_registry()
+    assert registry.get("haybale-speech:panel:SpeechSettingsPanel") is not None

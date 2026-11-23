@@ -14,3 +14,6 @@ Speech-to-text for audio clips, with faster-whisper
 
 ## Settings
 - **Speech** — Device, compute type and threads for models
+
+## Panels
+- **Speech** — Device, compute type and threads for speech models.
