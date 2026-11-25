@@ -15,7 +15,7 @@ license = {text = "MIT"}
 # CANON — pip requirements. Add third-party packages and sibling haybales here.
 dependencies = [
     "haywire-core>=0.6.1",
-    "haybale-audio>=0.6.1",
+    "haybale-audio>=0.6.2",
     "haybale-models>=0.6.1",
     "faster-whisper>=1.2.1",
     "numpy",
