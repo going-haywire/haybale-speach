@@ -29,6 +29,9 @@ dependencies = [
 [project.entry-points."haywire.libraries"]
 speech = "haybale_speech:Library"
 
+[project.urls]
+Source = "https://github.com/going-haywire/haybale-speech"  # from haybale.origin
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
