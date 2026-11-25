@@ -20,6 +20,7 @@ Speech-to-text for audio clips, with faster-whisper
 ### Speech
 - **Collect Clip** — Gathers the audio blocks of a flow into one clip, sent on Stop
 - **Load STT Model** — Loads a speech-to-text model onto the CPU or GPU, for Transcribe
+- **Speech Segmenter** — Cuts a live audio flow into speech clips at the pauses, for Transcribe
 - **Transcribe** — Turns the speech in an audio clip into text with a loaded model
 
 ## Types
