@@ -6,7 +6,7 @@ description = "Speech-to-text for audio clips, with faster-whisper"  # from hayb
 keywords = ["audio", "speech", "stt", "models"]  # from haybale.tags
 
 # CANON, but owned by the release machinery — synced to haybale.toml
-version = "0.0.1"
+version = "0.0.2"
 
 # ── authored here ────────────────────────────────────────────────────────────
 requires-python = ">=3.12"

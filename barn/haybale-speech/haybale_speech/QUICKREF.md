@@ -1,4 +1,4 @@
-# haybale-speech — component index (v0.0.1)
+# haybale-speech — component index (v0.0.2)
 
 ## node
 - `haybale-speech:node:CollectClipNode` — Collect Clip — Gathers the audio blocks of a flow into one clip, sent on Stop  _tags: audio, clip, collect, gather, buffer, speech, record, segment_
