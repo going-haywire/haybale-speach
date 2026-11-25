@@ -1,4 +1,4 @@
-"""The live speech demo graph in examples/: it loads, and every edge is valid.
+"""The live speech demo graph in examples/: it loads, every edge is valid, and a model is chosen.
 
 Rebuild the file after a port change with ``uv run --frozen python -m tests.test_demo_graph``.
 """
@@ -40,6 +40,9 @@ EDGES = [
     ("transcribe", "text", "print", "message"),
 ]
 
+#: The catalog entry Load STT Model picks, so the demo starts without a hand-picked model.
+MODEL = "haybale-speech:catalog:whisper-small"
+
 
 def build_demo_graph(graph: Any) -> dict[str, Any]:
     """Place the demo's nodes and edges in *graph*; return the nodes by name."""
@@ -51,6 +54,9 @@ def build_demo_graph(graph: Any) -> dict[str, Any]:
         nodes[name] = wrapper.node
     for source, outlet, target, inlet in EDGES:
         graph.create_edge_wrapper(nodes[source].node_id, outlet, nodes[target].node_id, inlet)
+    from haybale_models.value.model_ref import ModelRef
+
+    nodes["load"].ports["model"].set_value(ModelRef(catalog=MODEL))
     return nodes
 
 
@@ -74,6 +80,13 @@ def test_the_demo_graph_is_what_build_demo_graph_makes(graph: Any) -> None:
     )
     wanted = sorted((NODES[s][1], o, NODES[t][1], i) for s, o, t, i in EDGES)
     assert saved == wanted
+
+
+def test_the_demo_graph_picks_whisper_small(graph: Any) -> None:
+    """Load STT Model has its catalog entry chosen: no ``ModelMissing`` on start."""
+    assert graph.load_from_file(str(DEMO))
+    (load,) = [w.node for w in graph.list_node_wrappers() if type(w.node).__name__ == "LoadSttModelNode"]
+    assert load.ports["model"].get_value().catalog == MODEL
 
 
 if __name__ == "__main__":  # rebuild examples/live_speech_to_text.haywire
