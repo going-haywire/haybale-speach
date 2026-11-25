@@ -19,9 +19,9 @@ dependencies = [
     "haybale-core>=0.6.1",
     "haybale-models>=0.6.1",
     "faster-whisper>=1.2.1",
-    "numpy",
+    "numpy>=1.26",  # the first numpy with Python 3.12 wheels
     "samplerate>=0.2.4",
-    "ctranslate2",
+    "ctranslate2>=4.0",  # faster-whisper 1.2.1 needs ctranslate2>=4.0
 ]
 
 # The key is the entry-point name (unique within the group; need not match the
