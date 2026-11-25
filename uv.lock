@@ -793,13 +793,13 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ctranslate2" },
+    { name = "ctranslate2", specifier = ">=4.0" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "haybale-audio", editable = "../haywire-repo/barn/haybale-audio" },
     { name = "haybale-core", editable = "../haywire-repo/barn/haybale-core" },
     { name = "haybale-models", editable = "../haywire-repo/barn/haybale-models" },
     { name = "haywire-core", editable = "../haywire-repo/packages/haywire-core" },
-    { name = "numpy" },
+    { name = "numpy", specifier = ">=1.26" },
     { name = "samplerate", specifier = ">=0.2.4" },
 ]
 
@@ -842,7 +842,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8" },
-    { name = "pytest-timeout" },
+    { name = "pytest-timeout", specifier = ">=1.0" },
     { name = "ruff", specifier = "==0.12.12" },
 ]
 
