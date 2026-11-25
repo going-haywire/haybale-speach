@@ -20,10 +20,10 @@ tags = ["audio", "speech", "stt", "models"]  # filter tags in the library browse
 
 # Sibling haybales this library subscribes to, as MODULE names (not
 # distribution names). Required for hot-reload scope tracking.
-linked_libraries = ["haybale_audio", "haybale_models"]
+linked_libraries = ["haybale_audio", "haybale_core", "haybale_models"]
 
 # ── declared paths, relative to the project root ────────────────────────────
-# examples_path = "examples/"
+examples_path = "examples/"
 # tests_path = "tests/"
 
 # One supplementary human-readable page: a bare filename in this directory.
