@@ -2,8 +2,8 @@
 [project]
 # ── generated from haybale.toml at publish; hand-edits are reported as drift ─
 name = "haybale-speech"  # from haybale.name
-description = "Speech-to-text for audio clips, with faster-whisper"  # from haybale.description
-keywords = ["audio", "speech", "stt", "models"]  # from haybale.tags
+description = "Speech-to-text and text-to-speech, with faster-whisper and Kokoro"  # from haybale.description
+keywords = ["audio", "speech", "stt", "tts", "models"]  # from haybale.tags
 
 # CANON, but owned by the release machinery — synced to haybale.toml
 version = "0.0.2"
@@ -34,7 +34,7 @@ dependencies = [
 speech = "haybale_speech:Library"
 
 [project.urls]
-Source = "https://github.com/going-haywire/haybale-speech"  # from haybale.origin
+Source = "https://github.com/going-haywire/haybale-speech"
 
 [build-system]
 requires = ["hatchling"]
