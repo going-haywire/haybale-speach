@@ -1,19 +1,28 @@
-"""Speech Segmenter — cuts a live audio flow into speech clips at the pauses."""
+"""Speech Segmenter — the clip cutter of 0.0.2, kept so saved graphs load. Use Clip Segmenter."""
 
 from __future__ import annotations
 
 import time
 
+from haybale_audio.dsp.segmenter import Segmenter
 from haybale_audio.emitter import STATUS_INTERVAL, deliver_to_subscribers, set_status
 from haybale_audio.value import AudioBlock
 from haywire.api import FLOAT, INT, STRING, BaseNode, ExecutionContext, LabelWidget, NodeType, node
 
-from haybale_speech.runtime.segmenter import Segmenter, speech_clip
+from haybale_speech.runtime.audio import model_input
+
+#: The sample rate of the clips the segmenter sends: the rate speech models take.
+SPEECH_RATE = 16000
+
+
+def speech_clip(segment: AudioBlock) -> AudioBlock:
+    """Return *segment* mixed to mono and resampled to :data:`SPEECH_RATE`, as one block."""
+    return AudioBlock(model_input(segment, SPEECH_RATE)[None, :], SPEECH_RATE)
 
 
 @node(
     label="Speech Segmenter",
-    description="Cuts a live audio flow into speech clips at the pauses, for Transcribe",
+    description="Cuts a live audio flow into speech clips for Audio Events; replaced by Clip Segmenter",
     menu="speech",
     search_tags=[
         "audio",
@@ -28,9 +37,18 @@ from haybale_speech.runtime.segmenter import Segmenter, speech_clip
         "microphone",
     ],
     node_type=NodeType.CONTROL,
+    deprecation_warning=(
+        "Speech Segmenter is replaced by Clip Segmenter (haybale-audio, menu audio/clip): its clips go "
+        "to Clip Events, whose Clip connects to Transcribe"
+    ),
 )
 class SpeechSegmenterNode(BaseNode):
-    """Listens to an audio flow and sends each stretch of speech as a clip: mono, 16 kHz.
+    """Sends each stretch of speech in an audio flow to Audio Events, as a mono 16 kHz block.
+    Replaced by Clip Segmenter.
+
+    Graphs saved with it keep loading, but an Audio Event's `Audio` no longer connects to
+    Transcribe, which takes an Audio Clip: rebuild such a graph with haybale-audio's Clip
+    Segmenter and a Clip Event, whose `Clip` goes to Transcribe.
 
     A block is loud when its level (RMS) is above `Threshold`. The first loud block opens a
     segment, together with the `Pre-roll` before it, so a quiet first sound is kept. A pause
@@ -38,14 +56,6 @@ class SpeechSegmenterNode(BaseNode):
     `Subscribers`; the pause itself is left out. Speech shorter than `Min Seconds` (a click, a
     cough) is discarded; a segment that reaches `Max Seconds` is sent at once and the next loud
     block opens a new one. The status shows the level, which helps to set the threshold.
-
-    The clip arrives in a flow of its own, so transcribing it never holds up the audio flow,
-    however long the model takes:
-
-    ```text
-    Device In → Audio Event → Speech Segmenter (Add)
-    Speech Segmenter (Subscribers) ← Audio Event → Print, with Transcribe's Text as the message
-    ```
 
     The listening Audio Event's `Audio` is the clip, its `Timestamp` the start of the speech in
     seconds since the segmenter's first block, and its `Block Number` the count of clips sent.
@@ -122,6 +132,10 @@ class SpeechSegmenterNode(BaseNode):
     def post_init(self) -> None:
         self.hb_segmenter = Segmenter()
         self.hb_status_at = 0.0
+        self.hb_channels = 0  # channel count of the stream so far
+        self.hb_rate = 0  # sample rate of the stream
+        self.hb_seconds = 0.0  # stream time fed so far
+        self.hb_offset = 0.0  # stream time at the segmenter's last restart
 
     def on_shutdown(self, context: ExecutionContext) -> None:
         self.hb_reset()
@@ -134,6 +148,7 @@ class SpeechSegmenterNode(BaseNode):
         segmenter = getattr(self, "hb_segmenter", None)
         if segmenter is not None:
             segmenter.reset()
+            self.hb_channels, self.hb_rate, self.hb_seconds, self.hb_offset = 0, 0, 0.0, 0.0
 
     def worker(
         self,
@@ -148,16 +163,23 @@ class SpeechSegmenterNode(BaseNode):
         if audio is None:
             raise ValueError("add needs an audio block")
         segmenter = self.hb_segmenter
+        self.hb_take_format(audio)
         segmenter.threshold = float(threshold)
         segmenter.hangover = max(0, int(hangover_ms)) / 1000
         segmenter.preroll = max(0, int(preroll_ms)) / 1000
         segmenter.min_length = float(min_seconds)
         segmenter.max_length = max(float(max_seconds), audio.duration)
-        segment = segmenter.feed(audio)
+        segment = segmenter.feed(audio)  # raises on another rate, or new channels inside a clip
+        self.hb_channels, self.hb_rate = audio.channels, audio.sample_rate
+        self.hb_seconds += audio.duration
         if segment is not None:
             subscribers = self.value("callbacks")
             deliver_to_subscribers(
-                context, subscribers, speech_clip(segment.audio), segmenter.sent, segment.start
+                context,
+                subscribers,
+                speech_clip(segment.audio),
+                segmenter.sent,
+                self.hb_offset + segment.start,
             )
             self.hb_report(
                 force=True, note=f"sent {segment.duration:.1f} s" if subscribers else "no subscriber"
@@ -165,6 +187,23 @@ class SpeechSegmenterNode(BaseNode):
         else:
             self.hb_report()
         return "next"
+
+    def hb_take_format(self, audio: AudioBlock) -> None:
+        """Let a new channel count start between two clips, as in 0.0.2.
+
+        haybale-audio's segmenter refuses a channel change anywhere in the stream; 0.0.2's
+        took a new one with each clip. So between clips the segmenter starts over, keeping its
+        counts and the stream time. Inside a clip a change is still an error, and so is
+        another sample rate, as in 0.0.2.
+        """
+        segmenter = self.hb_segmenter
+        new_channels = bool(self.hb_channels) and audio.channels != self.hb_channels
+        same_rate = audio.sample_rate == self.hb_rate
+        if new_channels and same_rate and not segmenter.speaking:
+            sent, discarded = segmenter.sent, segmenter.discarded
+            segmenter.reset()
+            segmenter.sent, segmenter.discarded = sent, discarded
+            self.hb_offset = self.hb_seconds
 
     def hb_report(self, force: bool = False, note: str = "") -> None:
         now = time.monotonic()

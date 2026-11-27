@@ -59,7 +59,7 @@ def fake_load(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     calls: list[tuple[Any, ...]] = []
 
     def load(path: Path, device: str, compute_type: str, threads: int, **kwargs: Any) -> SttModel:
-        calls.append((path, device, compute_type, threads))
+        calls.append((path, device, compute_type, threads, kwargs["workers"]))
         return SttModel(
             engine=_FakeEngine(),
             backend="faster-whisper",
@@ -67,6 +67,7 @@ def fake_load(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
             compute_type=compute_type,
             name=kwargs["name"],
             notes=kwargs.get("notes", ()),
+            workers=kwargs["workers"],
         )
 
     monkeypatch.setattr(whisper, "load", load)
@@ -81,7 +82,7 @@ def fake_kokoro(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     calls: list[tuple[Any, ...]] = []
 
     def load(path: Path, device: str, compute_type: str, threads: int, **kwargs: Any) -> TtsModel:
-        calls.append((path, device, compute_type, threads))
+        calls.append((path, device, compute_type, threads, kwargs["workers"]))
         engine = _FakeKokoro()
         return TtsModel(
             engine=engine,
@@ -151,8 +152,8 @@ def test_a_clip_transcribes_through_the_loaded_model(
     assert result.language == "de"
     assert result.duration == pytest.approx(1.0)
     assert len(fake_load) == 1
-    _path, device, compute_type, threads = fake_load[0]
-    assert (device, compute_type, threads) == ("cpu", "int8", 0)
+    _path, device, compute_type, threads, workers = fake_load[0]
+    assert (device, compute_type, threads, workers) == ("cpu", "int8", 0, 1)
     assert load.status.loaded == "< shows after the first run >"  # released when the run ended
     assert _pool().entries() == []
 
@@ -314,7 +315,7 @@ def test_speak_turns_text_into_a_mono_clip(
     load, speak, model = _loaded_tts(graph, model_file)
     assert load.status.loaded == "fake-whisper.bin · kokoro-onnx · cpu"
 
-    speak.worker(MagicMock(cancel=None), "Hello. How are you?", model, None, "af_heart", 1.25)
+    speak.worker(MagicMock(cancel=None), "Hello. How are you?", model, None, 1.25)
 
     clip = speak.ports["audio"].get_value()
     assert (clip.channels, clip.sample_rate) == (1, 24000)
@@ -330,7 +331,8 @@ def test_speak_names_the_voices_of_the_model_for_an_unknown_one(
 ) -> None:
     load, speak, model = _loaded_tts(graph, model_file)
     with pytest.raises(ValueError, match="has no voice 'zz_nobody'; it has af_heart, bf_emma"):
-        speak.worker(MagicMock(cancel=None), "Hello.", model, None, "zz_nobody", 1.0)
+        speak.settings.voice_name = "zz_nobody"
+        speak.worker(MagicMock(cancel=None), "Hello.", model, None, 1.0)
     load.on_shutdown(MagicMock())
 
 
@@ -338,13 +340,14 @@ def test_a_picked_voice_takes_the_place_of_the_voice_name(
     graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
 ) -> None:
     load, pick, model = _loaded_tts(graph, model_file, PICK)
-    pick.worker(MagicMock(), model, "bf_emma")
+    pick.settings.voice_name = "bf_emma"
+    pick.worker(MagicMock(), model)
     voice = pick.ports["voice"].get_value()
     assert (voice.name, voice.language, voice.backend) == ("bf_emma", "en-gb", "kokoro-onnx")
     assert pick.ports["language"].get_value() == "en-gb"
 
     speak = add_node(graph, *SPEAK)
-    speak.worker(MagicMock(cancel=None), "Cheerio.", model, voice, "af_heart", 1.0)
+    speak.worker(MagicMock(cancel=None), "Cheerio.", model, voice, 1.0)
     assert model.engine.calls == [("Cheerio.", 1.0, "en-gb")]
     assert float(speak.ports["audio"].get_value().data.max()) == 0.0  # bf_emma's style, not af_heart's
     load.on_shutdown(MagicMock())
@@ -353,7 +356,7 @@ def test_a_picked_voice_takes_the_place_of_the_voice_name(
 def test_speak_without_a_model_is_an_error(graph: Any) -> None:
     speak = add_node(graph, *SPEAK)
     with pytest.raises(ValueError, match="no model"):
-        speak.worker(MagicMock(cancel=None), "Hello.", None, None, "af_heart", 1.0)
+        speak.worker(MagicMock(cancel=None), "Hello.", None, None, 1.0)
 
 
 def test_a_tts_model_does_not_fit_transcribe(
@@ -403,3 +406,101 @@ def test_collect_clip_drops_blocks_past_max_seconds(graph: Any) -> None:
     assert clip.ports["status"].get_value() == "Full at 0.2 s — 1 blocks dropped"
     clip.worker(_context("stop"))
     assert clip.ports["clip"].get_value().frames == 3200
+
+
+def test_workers_reach_the_backend_and_another_count_loads_another_model(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_load: list[tuple[Any, ...]]
+) -> None:
+    begin, load, transcribe, _ = _graph(graph)
+    load.ports["model"].set_value(place_model(model_file))
+    transcribe.ports["audio"].set_value(AudioBlock(np.zeros((1, 16000), np.float32), 16000))
+    load.settings.workers = 2
+    run_from(graph, begin)
+    assert fake_load[-1][4] == 2
+    load.settings.workers = 3
+    run_from(graph, begin)
+    assert [call[4] for call in fake_load] == [2, 3]  # the pool key holds the count
+
+
+def test_transcribe_and_speak_take_and_give_audio_clips(graph: Any) -> None:
+    from haybale_audio.types.audio_clip import AUDIO_CLIP
+
+    transcribe = add_node(graph, *TRANSCRIBE)
+    speak = add_node(graph, *SPEAK)
+    assert transcribe.ports["audio"].type_cls is AUDIO_CLIP
+    assert speak.ports["audio"].type_cls is AUDIO_CLIP
+    assert transcribe.ports["audio"].label == speak.ports["audio"].label == "Clip"
+
+
+def test_speak_feeds_a_clip_player_and_an_audio_block_does_not_feed_transcribe(graph: Any) -> None:
+    speak = add_node(graph, *SPEAK)
+    player = add_node(graph, "haybale_audio.nodes.clip_player", "ClipPlayerNode")
+    event = add_node(graph, "haybale_audio.nodes.audio_event", "AudioEventNode")
+    transcribe = add_node(graph, *TRANSCRIBE)
+    good = graph.create_edge_wrapper(speak.node_id, "audio", player.node_id, "clip")
+    bad = graph.create_edge_wrapper(event.node_id, "audio", transcribe.node_id, "audio")
+    graph.force_validation()
+    assert good.state.is_valid()
+    assert bad is None or not bad.state.is_valid()
+
+
+def test_the_deprecated_collect_clip_still_feeds_transcribe(graph: Any) -> None:
+    clip = add_node(graph, *CLIP)
+    transcribe = add_node(graph, *TRANSCRIBE)
+    edge = graph.create_edge_wrapper(clip.node_id, "clip", transcribe.node_id, "audio")
+    graph.force_validation()
+    assert edge.state.is_valid()
+
+
+def test_a_changed_voice_name_is_picked_at_the_next_run(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
+) -> None:
+    """A settings write marks no port dirty; Pick Voice still runs again, as the graph runs."""
+    load, pick, model = _loaded_tts(graph, model_file, PICK)
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
+    pick.settings.voice_name = "bf_emma"  # the Properties panel
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "bf_emma"
+    pick.ports["settings.voice_name"].set_value("af_heart")  # the card's config port
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
+    load.on_shutdown(MagicMock())
+
+
+def test_voice_name_promotes_to_an_inlet_that_chooses_the_voice(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
+) -> None:
+    from haywire.api import PortType
+    from haywire.core.node.promotion import demote_setting, promote_setting
+
+    load, pick, model = _loaded_tts(graph, model_file, PICK)
+    demote_setting(pick, "settings.voice_name")  # a config port by default
+    promote_setting(pick, "settings", "voice_name", direction=PortType.INLET)
+    text = add_node(graph, *TRANSCRIBE)  # any STRING outlet
+    edge = graph.create_edge_wrapper(text.node_id, "text", pick.node_id, "settings.voice_name")
+    graph.force_validation()
+    assert edge.state.is_valid()
+    text.out("text", "bf_emma")
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "bf_emma"
+    text.out("text", "af_heart")  # a new value on the wire, while the graph runs
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
+    load.on_shutdown(MagicMock())
+
+
+def test_voice_name_promotes_to_an_outlet_that_passes_it_on(graph: Any) -> None:
+    from haywire.api import PortType
+    from haywire.core.node.promotion import demote_setting, promote_setting
+
+    speak = add_node(graph, *SPEAK)
+    printer = add_node(graph, "haybale_core.nodes.print", "PrintNode")
+    demote_setting(speak, "settings.voice_name")
+    promote_setting(speak, "settings", "voice_name", direction=PortType.OUTLET)
+    edge = graph.create_edge_wrapper(speak.node_id, "settings.voice_name", printer.node_id, "message")
+    graph.force_validation()
+    assert edge.state.is_valid()
+    speak.settings.voice_name = "bf_emma"
+    printer._execute(MagicMock(control_pin="exec"))
+    assert printer.ports["message"].get_value() == "bf_emma"

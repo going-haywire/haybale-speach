@@ -15,13 +15,13 @@ if TYPE_CHECKING:
 @panel(
     surface=BarnsSurface,
     label="Speech",
-    description="Device, compute type and threads for speech models.",
+    description="Device, compute type, threads and workers for speech models.",
     icon=hui.icon.models,
     order=20,
     default_open=False,
 )
 class SpeechSettingsPanel(BasePanel):
-    """Device, compute type and threads for speech models."""
+    """Device, compute type, threads and workers for speech models."""
 
     def draw(self, ctx: "SessionContext", layout: PanelLayout) -> None:
         registry = ctx.app.library_service.get_settings_registry()

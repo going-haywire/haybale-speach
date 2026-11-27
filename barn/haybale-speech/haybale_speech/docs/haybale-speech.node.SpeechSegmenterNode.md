@@ -2,7 +2,9 @@
 
 `haybale-speech:node:SpeechSegmenterNode` · kind: node
 
-Cuts a live audio flow into speech clips at the pauses, for Transcribe
+Cuts a live audio flow into speech clips for Audio Events; replaced by Clip Segmenter
+
+> **Deprecated:** Speech Segmenter is replaced by Clip Segmenter (haybale-audio, menu audio/clip): its clips go to Clip Events, whose Clip connects to Transcribe
 
 ## Ports
 
@@ -21,7 +23,12 @@ Cuts a live audio flow into speech clips at the pauses, for Transcribe
 
 ## Notes
 
-Listens to an audio flow and sends each stretch of speech as a clip: mono, 16 kHz.
+Sends each stretch of speech in an audio flow to Audio Events, as a mono 16 kHz block.
+Replaced by Clip Segmenter.
+
+Graphs saved with it keep loading, but an Audio Event's `Audio` no longer connects to
+Transcribe, which takes an Audio Clip: rebuild such a graph with haybale-audio's Clip
+Segmenter and a Clip Event, whose `Clip` goes to Transcribe.
 
 A block is loud when its level (RMS) is above `Threshold`. The first loud block opens a
 segment, together with the `Pre-roll` before it, so a quiet first sound is kept. A pause
@@ -29,14 +36,6 @@ of `Hang-over` ends the segment and the clip goes to every Audio Event listening
 `Subscribers`; the pause itself is left out. Speech shorter than `Min Seconds` (a click, a
 cough) is discarded; a segment that reaches `Max Seconds` is sent at once and the next loud
 block opens a new one. The status shows the level, which helps to set the threshold.
-
-The clip arrives in a flow of its own, so transcribing it never holds up the audio flow,
-however long the model takes:
-
-```text
-Device In → Audio Event → Speech Segmenter (Add)
-Speech Segmenter (Subscribers) ← Audio Event → Print, with Transcribe's Text as the message
-```
 
 The listening Audio Event's `Audio` is the clip, its `Timestamp` the start of the speech in
 seconds since the segmenter's first block, and its `Block Number` the count of clips sent.

@@ -50,6 +50,30 @@ def test_whisper_small_transcribes_the_fixture(whisper_small: Path, speech_wav: 
     assert result.segments and result.segments[-1].end <= result.duration + 0.5
 
 
+def test_two_workers_transcribe_two_clips_at_once_as_one_would(
+    whisper_small: Path, speech_wav: Path
+) -> None:
+    """No lock serialises the model: with Workers 2 two threads share it and each gets the full text."""
+    import threading
+
+    from haybale_audio.value import AudioBlock
+
+    data, rate = soundfile.read(speech_wav, dtype="float32", always_2d=True)
+    model = load_whisper(whisper_small, "cpu", "int8", 2, name="Whisper small", workers=2)
+    samples = model_input(AudioBlock(data.T.copy(), rate), model.sample_rate)
+    alone = transcribe(model, samples, language="en").text
+    texts: list[str] = []
+    threads = [
+        threading.Thread(target=lambda: texts.append(transcribe(model, samples, language="en").text))
+        for _ in range(2)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert texts == [alone, alone]
+
+
 def test_the_catalog_entry_runs_in_a_graph(
     library_system: object, tmp_path: Path, whisper_small: Path, speech_wav: Path
 ) -> None:

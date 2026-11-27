@@ -23,7 +23,7 @@ Speech-to-text and text-to-speech, with faster-whisper and Kokoro
 - **Load Speech Model** — Loads a speech model onto the CPU or GPU, for Transcribe, Speak or Pick Voice
 - **Pick Voice** — Picks one of a text-to-speech model's own voices, for Speak
 - **Speak** — Turns text into an audio clip with a loaded text-to-speech model
-- **Speech Segmenter** — Cuts a live audio flow into speech clips at the pauses, for Transcribe
+- **Speech Segmenter** — Cuts a live audio flow into speech clips for Audio Events; replaced by Clip Segmenter
 - **Transcribe** — Turns the speech in an audio clip into text with a loaded model
 
 ## Types
@@ -34,7 +34,7 @@ Speech-to-text and text-to-speech, with faster-whisper and Kokoro
 - **Voice** — A voice a text-to-speech model speaks with. Never saved with the graph.
 
 ## Settings
-- **Speech** — Device, compute type and threads for models
+- **Speech** — Device, compute type, threads and workers for models
 
 ## Panels
-- **Speech** — Device, compute type and threads for speech models.
+- **Speech** — Device, compute type, threads and workers for speech models.

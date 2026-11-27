@@ -18,6 +18,7 @@ Loads a speech model onto the CPU or GPU, for Transcribe, Speak or Pick Voice
 | `device` | settings | `None` | Where models run: auto (a CUDA GPU when one can run, else the CPU), cpu or cuda |
 | `compute_type` | settings | `None` | Number format the model computes in: auto is int8 on the CPU and float16 on a GPU; a format the device cannot run falls back to float32 |
 | `threads` | settings | `None` | Threads a model uses on the CPU; 0 lets the engine choose |
+| `workers` | settings | `None` | Clips one model works on at once, for flows that share it (Clip Events set to Pooled); each run shares the CPU threads, so more than the cores allow is slower |
 | `loaded` | status | `'< shows after the first run >'` | Name, backend, device and compute type of the loaded model |
 
 ## Notes
@@ -44,7 +45,13 @@ that is not installed is an error on the card.
   and `float16` on a GPU. A format the device cannot run falls back to `float32`, with a
   note. kokoro-onnx runs the precision of the model file, and notes any other choice.
 - `CPU threads`: `0` lets the engine choose.
+- `Workers`: how many clips the model works on at once, for flows that share it, such as
+  Clip Events set to Pooled behind one Clip Segmenter. `1` runs one at a time. More only
+  helps while cores are idle: each run shares the CPU threads. faster-whisper gets it as
+  `num_workers` (CTranslate2's `inter_threads`), which lets concurrent calls run in parallel
+  on one loaded model at the cost of more memory per worker; kokoro-onnx needs no setting
+  of its own.
 
-All three default to the library's *Speech* settings. Nodes that pick the same model with
+All four default to the library's *Speech* settings. Nodes that pick the same model with
 the same settings share one loaded copy. The model is loaded when the graph runs and freed
 when it stops.

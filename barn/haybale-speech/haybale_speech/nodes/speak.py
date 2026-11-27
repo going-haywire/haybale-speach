@@ -10,12 +10,16 @@ from haywire.api import (
     BaseNode,
     ExecutionContext,
     MenuWidget,
+    NodeSettings,
     NodeType,
+    PortType,
     ProgressSettings,
+    Promotable,
+    SliderWidget,
     bag,
     node,
-    SliderWidget,
     progress_field,
+    setting,
 )
 
 from haybale_speech.runtime.kokoro import SPEED_RANGE, speak, voice as model_voice
@@ -24,6 +28,29 @@ from haybale_speech.value import TtsModel, Voice
 
 #: Suggested voices (Kokoro's); any voice the model has can be typed in.
 VOICES = ("af_heart", "af_bella", "am_michael", "bf_emma", "bm_george", "ff_siwis", "if_sara", "ef_dora")
+
+
+class VoiceSettings(NodeSettings):
+    """Which of the model's voices speaks. A port by default; promotable to an inlet or an outlet."""
+
+    voice_name = setting[STRING](
+        VOICES[0],
+        label="Voice Name",
+        category="Voice",
+        description="The model's voice, such as af_heart; the first letter of a Kokoro voice is its language",
+        widget=MenuWidget.config(properties={"options": list(VOICES), "new_value_mode": "add-unique"}),
+        promotable=Promotable.ALL,
+        promote_default=PortType.CONFIG,
+    )
+
+
+def run_again_on_change(node: BaseNode, settings: NodeSettings) -> None:
+    """Make the data node *node* run again whenever a field of *settings* changes.
+
+    A settings write marks no port dirty, so without this a data node whose inlets do not
+    change keeps its last outlet while the graph runs.
+    """
+    settings._subscribe(lambda name, value, old: node.run_again())
 
 
 class SpeakProgress(ProgressSettings):
@@ -57,17 +84,22 @@ class SpeakNode(BaseNode):
 
     - `Voice Name`: the voice by name, such as `af_heart` (American English) or `bf_emma` (British
       English); the first letter of a Kokoro voice is its language. A `Voice` wire, from Pick
-      Voice, takes its place.
+      Voice, takes its place. It is a setting, shown on the card: promote it to an inlet to choose
+      the voice from another node while the graph runs, or to an outlet to pass it on.
     - `Speed`: 0.5 to 2.0; 1.0 is the voice's own pace.
 
-    `Audio` is the spoken clip and `Seconds` its length. The text is spoken one sentence at a
-    time; stopping the graph stops after the current sentence.
+    `Clip` is the spoken clip and `Seconds` its length; Clip Player plays it. The text is spoken
+    one sentence at a time; stopping the graph stops after the current sentence.
     """
 
+    settings = bag(VoiceSettings)
     progress = bag(SpeakProgress)
 
+    def post_init(self) -> None:
+        run_again_on_change(self, self.settings)
+
     def init(self) -> None:
-        from haybale_audio.types.audio import AUDIO
+        from haybale_audio.types.audio_clip import AUDIO_CLIP
 
         from haybale_speech.types.tts_model import TTS_MODEL
         from haybale_speech.types.voice import VOICE
@@ -77,17 +109,6 @@ class SpeakNode(BaseNode):
         self.add(
             VOICE.as_inlet(
                 "voice", label="Voice", description="A voice from Pick Voice; replaces Voice Name"
-            )
-        )
-        self.add(
-            STRING.as_config(
-                "voice_name",
-                default=VOICES[0],
-                label="Voice Name",
-                widget=MenuWidget.config(
-                    properties={"options": list(VOICES), "new_value_mode": "add-unique"}
-                ),
-                description="The model's voice to speak with, while no Voice is wired",
             )
         )
         low, high = SPEED_RANGE
@@ -100,7 +121,7 @@ class SpeakNode(BaseNode):
                 description="0.5 to 2.0; 1.0 is the voice's own pace",
             )
         )
-        self.add(AUDIO.as_outlet("audio", label="Audio", description="The spoken clip, mono"))
+        self.add(AUDIO_CLIP.as_outlet("audio", label="Clip", description="The spoken clip, mono"))
         self.add(FLOAT.as_outlet("seconds", label="Seconds", description="Length of the clip"))
 
     def worker(
@@ -109,12 +130,11 @@ class SpeakNode(BaseNode):
         text: str,
         model: TtsModel | None,
         voice: Voice | None,
-        voice_name: str,
         speed: float,
     ) -> None:
         if model is None:
             raise ValueError("no model — connect Load Speech Model")
-        chosen = voice if voice is not None else model_voice(model, voice_name)
+        chosen = voice if voice is not None else model_voice(model, str(self.settings.voice_name))
         with self.progress.busy("main", "speaking") as span:
             try:
                 samples = speak(

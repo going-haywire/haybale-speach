@@ -4,6 +4,8 @@
 
 Gathers the audio blocks of a flow into one clip, sent on Stop
 
+> **Deprecated:** This Collect Clip moved to haybale-audio (menu audio/clip); use that one
+
 ## Ports
 
 | id | direction | type | description |
@@ -15,29 +17,15 @@ Gathers the audio blocks of a flow into one clip, sent on Stop
 | `status` | config | `haywire-core:type:STRING` | Text data |
 | `next` | outlet | `haybale-audio:type:AUDIO_EXEC` | Signal for sequencing the nodes of an audio flow |
 | `done` | outlet | `haywire-core:type:EXEC` | Runs after Stop, once Clip is set |
-| `clip` | outlet | `haybale-audio:type:AUDIO` | The gathered audio |
+| `clip` | outlet | `haybale-audio:type:AUDIO_CLIP` | The gathered audio |
 | `seconds` | outlet | `haywire-core:type:FLOAT` | Length of the clip so far |
 
 ## Notes
 
-Appends each block to a clip in memory; `Stop` sends the clip and starts a new one.
+haybale-audio's Collect Clip under its 0.0.2 name in haybale-speech. Replaced by that node.
 
-The first block fixes the clip's channel count and sample rate; a later block that differs
-is an error. Blocks past `Max Seconds` are dropped, and the status says so.
-
-```text
-File Player → Audio Event → Collect Clip (Add)
-Run Button → Tick Event → Collect Clip (Stop) → Done → Print (Transcribe's Text)
-```
-
-Inputs:
-    add: Append the block on `audio` (wire it to an Audio Event's Block Ready)
-    stop: Send the clip on `clip` and continue on `done`; an empty clip sends nothing
-    audio: The block to append
-    max_seconds: Longest clip kept
-
-Outputs:
-    next: Control flow after a block is appended
-    done: Control flow after `stop`, once `clip` holds the clip
-    clip: The gathered audio, one block
-    seconds: Length of the clip so far
+It works as haybale-audio's does, and graphs saved with it keep loading: its `Clip` is an
+Audio Clip, so it still connects to Transcribe. In 0.0.2 `Clip` was Audio, a block: an
+edge saved from it to an Audio inlet, such as a Recorder's or Reblock's, now loads broken
+(no adapter from Audio Clip to Audio). Play the clip through Clip Player into an Audio
+Event instead. New graphs use Collect Clip from the *audio/clip* menu.

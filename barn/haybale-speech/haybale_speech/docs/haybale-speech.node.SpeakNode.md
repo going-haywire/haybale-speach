@@ -11,16 +11,17 @@ Turns text into an audio clip with a loaded text-to-speech model
 | `text` | inlet | `haywire-core:type:STRING` | The text to speak |
 | `model` | inlet | `haybale-speech:type:TTS_MODEL` | A loaded text-to-speech model |
 | `voice` | inlet | `haybale-speech:type:VOICE` | A voice from Pick Voice; replaces Voice Name |
-| `voice_name` | config | `haywire-core:type:STRING` | The model's voice to speak with, while no Voice is wired |
 | `speed` | config | `haywire-core:type:FLOAT` | 0.5 to 2.0; 1.0 is the voice's own pace |
+| `settings.voice_name` | config | `haywire-core:type:STRING` | The model's voice, such as af_heart; the first letter of a Kokoro voice is its language |
 | `progress.main` | config | `haywire-core:type:PROGRESS` |  |
-| `audio` | outlet | `haybale-audio:type:AUDIO` | The spoken clip, mono |
+| `audio` | outlet | `haybale-audio:type:AUDIO_CLIP` | The spoken clip, mono |
 | `seconds` | outlet | `haywire-core:type:FLOAT` | Length of the clip |
 
 ## Settings
 
 | name | bag | default | description |
 |---|---|---|---|
+| `voice_name` | settings | `'af_heart'` | The model's voice, such as af_heart; the first letter of a Kokoro voice is its language |
 | `main` | progress | `PROGRESS(active=False, fraction=None, label='')` |  |
 
 ## Notes
@@ -32,8 +33,9 @@ Connect `Model` to Load Speech Model and `Text` to the text to speak, such as Tr
 
 - `Voice Name`: the voice by name, such as `af_heart` (American English) or `bf_emma` (British
   English); the first letter of a Kokoro voice is its language. A `Voice` wire, from Pick
-  Voice, takes its place.
+  Voice, takes its place. It is a setting, shown on the card: promote it to an inlet to choose
+  the voice from another node while the graph runs, or to an outlet to pass it on.
 - `Speed`: 0.5 to 2.0; 1.0 is the voice's own pace.
 
-`Audio` is the spoken clip and `Seconds` its length. The text is spoken one sentence at a
-time; stopping the graph stops after the current sentence.
+`Clip` is the spoken clip and `Seconds` its length; Clip Player plays it. The text is spoken
+one sentence at a time; stopping the graph stops after the current sentence.

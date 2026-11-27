@@ -98,6 +98,7 @@ def load(
     *,
     name: str,
     notes: tuple[str, ...] = (),
+    workers: int = 1,
 ) -> TtsModel:
     """Load the Kokoro model in the folder *path*.
 
@@ -111,6 +112,8 @@ def load(
         threads: CPU threads; ``0`` lets ONNX Runtime choose.
         name: The model's name for the card.
         notes: Notes from resolving the settings, kept for the card.
+        workers: Texts the model speaks at once. ONNX Runtime runs one session from several
+            threads, and kokoro-onnx locks only its phonemizer (espeak-ng), so this is a limit only.
     """
     import onnxruntime
     from kokoro_onnx import Kokoro
@@ -134,6 +137,7 @@ def load(
         voices=tuple(engine.get_voices()),
         sample_rate=SAMPLE_RATE,
         notes=notes,
+        workers=max(1, workers),
     )
 
 
@@ -214,7 +218,7 @@ def speak(
         raise ValueError("no text to speak")
     pause = np.zeros(int(SENTENCE_PAUSE * model.sample_rate), np.float32)
     pieces: list[np.ndarray] = []
-    with model.lock:
+    with model.slots:
         for index, sentence in enumerate(parts):
             if cancel is not None and cancel.is_set():
                 raise Cancelled

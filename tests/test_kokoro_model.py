@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -55,6 +56,31 @@ def test_kokoro_speaks_and_whisper_hears_it(kokoro_82m: Path, whisper_small: Pat
     stt = load_whisper(whisper_small, "cpu", "int8", 0, name="Whisper small")
     result = transcribe(stt, model_input(clip, stt.sample_rate), language="en")
     assert _words(result.text) == _words(SENTENCE)
+
+
+def test_kokoro_speaks_two_texts_at_once_as_it_would_one_after_the_other(kokoro_82m: Path) -> None:
+    """ONNX Runtime runs one session from two threads; kokoro-onnx locks only espeak-ng."""
+    import threading
+
+    import numpy as np
+
+    device, compute, notes = kokoro.resolve("cpu", "auto")
+    tts = kokoro.load(kokoro_82m, device, compute, 2, name="Kokoro 82M", notes=notes, workers=2)
+    voice = kokoro.voice(tts, "af_heart")
+    texts = [SENTENCE, "Good evening. This is a different voice, speaking from the studio."]
+    alone = [kokoro.speak(tts, text, voice) for text in texts]
+    together: list[Any] = [None, None]
+
+    def run(index: int) -> None:
+        together[index] = kokoro.speak(tts, texts[index], voice)
+
+    threads = [threading.Thread(target=run, args=(i,)) for i in (0, 1)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    for one, both in zip(alone, together, strict=True):
+        assert one.shape == both.shape and np.allclose(one, both, atol=1e-4)
 
 
 def test_the_circle_runs_in_a_graph(
