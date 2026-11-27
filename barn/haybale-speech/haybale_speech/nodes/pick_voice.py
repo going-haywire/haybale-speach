@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from haywire.api import STRING, BaseNode, ExecutionContext, MenuWidget, NodeType, node
+from haywire.api import STRING, BaseNode, ExecutionContext, NodeType, bag, node
 
-from haybale_speech.nodes.speak import VOICES
+from haybale_speech.nodes.speak import VoiceSettings, run_again_on_change
 from haybale_speech.runtime.kokoro import voice as model_voice
 from haybale_speech.value import TtsModel
 
@@ -22,40 +22,29 @@ class PickVoiceNode(BaseNode):
     Connect `Model` to Load Speech Model. `Voice Name` is one of the model's voices, such as
     `af_heart`; a name the model lacks is an error that lists the voices it has. `Language` is
     the language the voice speaks.
+
+    `Voice Name` is a setting, shown on the card. Promote it to an inlet to choose the voice from
+    another node while the graph runs, or to an outlet to tell other nodes which voice speaks. A
+    new name is picked at the next run.
     """
+
+    settings = bag(VoiceSettings)
+
+    def post_init(self) -> None:
+        run_again_on_change(self, self.settings)
 
     def init(self) -> None:
         from haybale_speech.types.tts_model import TTS_MODEL
         from haybale_speech.types.voice import VOICE
 
         self.add(TTS_MODEL.as_inlet("model", label="Model", description="A loaded text-to-speech model"))
-        self.add(
-            STRING.as_config(
-                "voice_name",
-                default=VOICES[0],
-                label="Voice Name",
-                widget=MenuWidget.config(
-                    properties={"options": list(VOICES), "new_value_mode": "add-unique"}
-                ),
-                description="The model's voice",
-                on_change="_on_voice_name_changed",
-            )
-        )
         self.add(VOICE.as_outlet("voice", label="Voice", description="The voice, for Speak"))
         self.add(STRING.as_outlet("language", label="Language", description="The language the voice speaks"))
 
-    def _on_voice_name_changed(self, port: object, value: object) -> None:
-        """Another voice: pick it at the next execution, while the graph runs too.
-
-        A config write marks no port dirty, and the model inlet rarely changes, so without this
-        the node would keep handing out the voice it picked first.
-        """
-        self.run_again()
-
-    def worker(self, context: ExecutionContext, model: TtsModel | None, voice_name: str) -> None:
+    def worker(self, context: ExecutionContext, model: TtsModel | None) -> None:
         if model is None:
             raise ValueError("no model — connect Load Speech Model")
-        picked = model_voice(model, voice_name)
+        picked = model_voice(model, str(self.settings.voice_name))
         self.out("voice", picked)
         self.out("language", picked.language)
         return None

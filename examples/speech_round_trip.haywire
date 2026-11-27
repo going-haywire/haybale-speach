@@ -1,8 +1,8 @@
 {
   "format_version": 6,
   "filestem": "speech_round_trip",
-  "created_at": "2026-11-27T21:40:48.214375",
-  "modified_at": "2026-11-27T21:40:48.230188",
+  "created_at": "2026-11-27T22:38:02.462314",
+  "modified_at": "2026-11-27T22:38:02.478759",
   "requires": {
     "haybale-audio": "0.6.6",
     "haybale-core": "0.6.6",
@@ -597,39 +597,6 @@
           "registry_key": "haybale-speech:type:VOICE"
         }
       },
-      "voice_name": {
-        "kwargs": {
-          "label": "Voice Name",
-          "description": "The model's voice to speak with, while no Voice is wired",
-          "default": {
-            "value": "af_heart"
-          },
-          "store_strategy": 4,
-          "widget_key": "haywire-core:widget:MenuWidget",
-          "widget_config": {
-            "properties": {
-              "options": [
-                "af_heart",
-                "af_bella",
-                "am_michael",
-                "bf_emma",
-                "bm_george",
-                "ff_siwis",
-                "if_sara",
-                "ef_dora"
-              ],
-              "new_value_mode": "add-unique"
-            }
-          },
-          "id": "voice_name",
-          "port_type": "config",
-          "order": 3,
-          "show_widget": "always"
-        },
-        "recipe": {
-          "registry_key": "haywire-core:type:STRING"
-        }
-      },
       "speed": {
         "kwargs": {
           "label": "Speed",
@@ -648,7 +615,7 @@
           },
           "id": "speed",
           "port_type": "config",
-          "order": 4,
+          "order": 3,
           "show_widget": "always"
         },
         "recipe": {
@@ -661,7 +628,7 @@
           "description": "The spoken clip, mono",
           "id": "audio",
           "port_type": "outlet",
-          "order": 5,
+          "order": 4,
           "show_widget": "never"
         },
         "recipe": {
@@ -675,7 +642,7 @@
           "store_strategy": 4,
           "id": "seconds",
           "port_type": "outlet",
-          "order": 6,
+          "order": 5,
           "show_widget": "never"
         },
         "recipe": {
@@ -775,8 +742,8 @@
     "promoted": {}
   },
   "nodes": {
-    "BeginPlayEventNode_5b967c67": {
-      "node_id": "BeginPlayEventNode_5b967c67",
+    "BeginPlayEventNode_586c7392": {
+      "node_id": "BeginPlayEventNode_586c7392",
       "registry_key": "haybale-core:node:BeginPlayEventNode",
       "node_data": {
         "ports": {
@@ -810,8 +777,8 @@
         "store": {}
       }
     },
-    "DeviceInNode_e537a681": {
-      "node_id": "DeviceInNode_e537a681",
+    "DeviceInNode_788eaf39": {
+      "node_id": "DeviceInNode_788eaf39",
       "registry_key": "haybale-audio:node:DeviceInNode",
       "node_data": {
         "ports": {
@@ -891,8 +858,8 @@
         "store": {}
       }
     },
-    "AudioEventNode_1fb0c685": {
-      "node_id": "AudioEventNode_1fb0c685",
+    "AudioEventNode_c30b396a": {
+      "node_id": "AudioEventNode_c30b396a",
       "registry_key": "haybale-audio:node:AudioEventNode",
       "node_data": {
         "ports": {
@@ -905,7 +872,7 @@
               "registry_key": "haybale-audio:type:AUDIO_CALLBACK"
             },
             "field_data": {
-              "name": "AudioEventNode_1fb0c685"
+              "name": "AudioEventNode_c30b396a"
             }
           },
           "block_ready": {
@@ -966,8 +933,8 @@
         "store": {}
       }
     },
-    "ClipSegmenterNode_ca05ca20": {
-      "node_id": "ClipSegmenterNode_ca05ca20",
+    "ClipSegmenterNode_c2cd0cce": {
+      "node_id": "ClipSegmenterNode_c2cd0cce",
       "registry_key": "haybale-audio:node:ClipSegmenterNode",
       "node_data": {
         "ports": {
@@ -1052,8 +1019,8 @@
         "store": {}
       }
     },
-    "ClipEventNode_863f2572": {
-      "node_id": "ClipEventNode_863f2572",
+    "ClipEventNode_ff413f53": {
+      "node_id": "ClipEventNode_ff413f53",
       "registry_key": "haybale-audio:node:ClipEventNode",
       "node_data": {
         "ports": {
@@ -1066,7 +1033,7 @@
               "registry_key": "haybale-audio:type:CLIP_CALLBACK"
             },
             "field_data": {
-              "name": "ClipEventNode_863f2572"
+              "name": "ClipEventNode_ff413f53"
             }
           },
           "clip_ready": {
@@ -1131,8 +1098,8 @@
         "store": {}
       }
     },
-    "LoadSpeechModelNode_070b4037": {
-      "node_id": "LoadSpeechModelNode_070b4037",
+    "LoadSpeechModelNode_ccc4f256": {
+      "node_id": "LoadSpeechModelNode_ccc4f256",
       "registry_key": "haybale-speech:node:LoadSpeechModelNode",
       "node_data": {
         "ports": {
@@ -1205,8 +1172,8 @@
         "store": {}
       }
     },
-    "TranscribeNode_4e6c8d99": {
-      "node_id": "TranscribeNode_4e6c8d99",
+    "TranscribeNode_d5d87a00": {
+      "node_id": "TranscribeNode_d5d87a00",
       "registry_key": "haybale-speech:node:TranscribeNode",
       "node_data": {
         "ports": {
@@ -1282,8 +1249,8 @@
         "store": {}
       }
     },
-    "PrintNode_46803d09": {
-      "node_id": "PrintNode_46803d09",
+    "PrintNode_48957702": {
+      "node_id": "PrintNode_48957702",
       "registry_key": "haybale-core:node:PrintNode",
       "node_data": {
         "ports": {
@@ -1329,8 +1296,8 @@
         "store": {}
       }
     },
-    "LoadSpeechModelNode_bb8dcb4d": {
-      "node_id": "LoadSpeechModelNode_bb8dcb4d",
+    "LoadSpeechModelNode_c455dfae": {
+      "node_id": "LoadSpeechModelNode_c455dfae",
       "registry_key": "haybale-speech:node:LoadSpeechModelNode",
       "node_data": {
         "ports": {
@@ -1404,8 +1371,8 @@
         "store": {}
       }
     },
-    "SpeakNode_59fdbc01": {
-      "node_id": "SpeakNode_59fdbc01",
+    "SpeakNode_b5bb699d": {
+      "node_id": "SpeakNode_b5bb699d",
       "registry_key": "haybale-speech:node:SpeakNode",
       "node_data": {
         "ports": {
@@ -1437,18 +1404,6 @@
             },
             "recipe": {
               "registry_key": "haybale-speech:type:VOICE"
-            }
-          },
-          "voice_name": {
-            "kwargs": {
-              "id": "voice_name",
-              "port_type": "config"
-            },
-            "recipe": {
-              "registry_key": "haywire-core:type:STRING"
-            },
-            "field_data": {
-              "value": "af_heart"
             }
           },
           "speed": {
@@ -1486,6 +1441,14 @@
           }
         },
         "settings": {
+          "settings": {
+            "values": {},
+            "promoted": {
+              "settings.voice_name": {
+                "direction": "config"
+              }
+            }
+          },
           "progress": {
             "values": {},
             "promoted": {
@@ -1505,8 +1468,8 @@
         "store": {}
       }
     },
-    "ClipPlayerNode_8bdfe758": {
-      "node_id": "ClipPlayerNode_8bdfe758",
+    "ClipPlayerNode_0a505e98": {
+      "node_id": "ClipPlayerNode_0a505e98",
       "registry_key": "haybale-audio:node:ClipPlayerNode",
       "node_data": {
         "ports": {
@@ -1608,8 +1571,8 @@
         "store": {}
       }
     },
-    "AudioEventNode_cd16c9eb": {
-      "node_id": "AudioEventNode_cd16c9eb",
+    "AudioEventNode_4173c0c6": {
+      "node_id": "AudioEventNode_4173c0c6",
       "registry_key": "haybale-audio:node:AudioEventNode",
       "node_data": {
         "ports": {
@@ -1622,7 +1585,7 @@
               "registry_key": "haybale-audio:type:AUDIO_CALLBACK"
             },
             "field_data": {
-              "name": "AudioEventNode_cd16c9eb"
+              "name": "AudioEventNode_4173c0c6"
             }
           },
           "block_ready": {
@@ -1684,8 +1647,8 @@
         "store": {}
       }
     },
-    "DeviceOutNode_173a3f3f": {
-      "node_id": "DeviceOutNode_173a3f3f",
+    "DeviceOutNode_3c245c6a": {
+      "node_id": "DeviceOutNode_3c245c6a",
       "registry_key": "haybale-audio:node:DeviceOutNode",
       "node_data": {
         "ports": {
@@ -1768,127 +1731,127 @@
     }
   },
   "edges": {
-    "BeginPlayEventNode_5b967c67[exec]->DeviceInNode_e537a681[start]": {
-      "source_node_id": "BeginPlayEventNode_5b967c67",
+    "BeginPlayEventNode_586c7392[exec]->DeviceInNode_788eaf39[start]": {
+      "source_node_id": "BeginPlayEventNode_586c7392",
       "outlet_port_id": "exec",
-      "sink_node_id": "DeviceInNode_e537a681",
+      "sink_node_id": "DeviceInNode_788eaf39",
       "inlet_port_id": "start",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "AudioEventNode_1fb0c685[listen_callback]->DeviceInNode_e537a681[callbacks]": {
-      "source_node_id": "AudioEventNode_1fb0c685",
+    "AudioEventNode_c30b396a[listen_callback]->DeviceInNode_788eaf39[callbacks]": {
+      "source_node_id": "AudioEventNode_c30b396a",
       "outlet_port_id": "listen_callback",
-      "sink_node_id": "DeviceInNode_e537a681",
+      "sink_node_id": "DeviceInNode_788eaf39",
       "inlet_port_id": "callbacks",
       "chain_adapter_keys": []
     },
-    "AudioEventNode_1fb0c685[block_ready]->ClipSegmenterNode_ca05ca20[add]": {
-      "source_node_id": "AudioEventNode_1fb0c685",
+    "AudioEventNode_c30b396a[block_ready]->ClipSegmenterNode_c2cd0cce[add]": {
+      "source_node_id": "AudioEventNode_c30b396a",
       "outlet_port_id": "block_ready",
-      "sink_node_id": "ClipSegmenterNode_ca05ca20",
+      "sink_node_id": "ClipSegmenterNode_c2cd0cce",
       "inlet_port_id": "add",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "AudioEventNode_1fb0c685[audio]->ClipSegmenterNode_ca05ca20[audio]": {
-      "source_node_id": "AudioEventNode_1fb0c685",
+    "AudioEventNode_c30b396a[audio]->ClipSegmenterNode_c2cd0cce[audio]": {
+      "source_node_id": "AudioEventNode_c30b396a",
       "outlet_port_id": "audio",
-      "sink_node_id": "ClipSegmenterNode_ca05ca20",
+      "sink_node_id": "ClipSegmenterNode_c2cd0cce",
       "inlet_port_id": "audio",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "ClipEventNode_863f2572[listen_callback]->ClipSegmenterNode_ca05ca20[callbacks]": {
-      "source_node_id": "ClipEventNode_863f2572",
+    "ClipEventNode_ff413f53[listen_callback]->ClipSegmenterNode_c2cd0cce[callbacks]": {
+      "source_node_id": "ClipEventNode_ff413f53",
       "outlet_port_id": "listen_callback",
-      "sink_node_id": "ClipSegmenterNode_ca05ca20",
+      "sink_node_id": "ClipSegmenterNode_c2cd0cce",
       "inlet_port_id": "callbacks",
       "chain_adapter_keys": []
     },
-    "ClipEventNode_863f2572[clip_ready]->PrintNode_46803d09[exec]": {
-      "source_node_id": "ClipEventNode_863f2572",
+    "ClipEventNode_ff413f53[clip_ready]->PrintNode_48957702[exec]": {
+      "source_node_id": "ClipEventNode_ff413f53",
       "outlet_port_id": "clip_ready",
-      "sink_node_id": "PrintNode_46803d09",
+      "sink_node_id": "PrintNode_48957702",
       "inlet_port_id": "exec",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "ClipEventNode_863f2572[clip]->TranscribeNode_4e6c8d99[audio]": {
-      "source_node_id": "ClipEventNode_863f2572",
+    "ClipEventNode_ff413f53[clip]->TranscribeNode_d5d87a00[audio]": {
+      "source_node_id": "ClipEventNode_ff413f53",
       "outlet_port_id": "clip",
-      "sink_node_id": "TranscribeNode_4e6c8d99",
+      "sink_node_id": "TranscribeNode_d5d87a00",
       "inlet_port_id": "audio",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "LoadSpeechModelNode_070b4037[loaded]->TranscribeNode_4e6c8d99[model]": {
-      "source_node_id": "LoadSpeechModelNode_070b4037",
+    "LoadSpeechModelNode_ccc4f256[loaded]->TranscribeNode_d5d87a00[model]": {
+      "source_node_id": "LoadSpeechModelNode_ccc4f256",
       "outlet_port_id": "loaded",
-      "sink_node_id": "TranscribeNode_4e6c8d99",
+      "sink_node_id": "TranscribeNode_d5d87a00",
       "inlet_port_id": "model",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "TranscribeNode_4e6c8d99[text]->PrintNode_46803d09[message]": {
-      "source_node_id": "TranscribeNode_4e6c8d99",
+    "TranscribeNode_d5d87a00[text]->PrintNode_48957702[message]": {
+      "source_node_id": "TranscribeNode_d5d87a00",
       "outlet_port_id": "text",
-      "sink_node_id": "PrintNode_46803d09",
+      "sink_node_id": "PrintNode_48957702",
       "inlet_port_id": "message",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "PrintNode_46803d09[done]->ClipPlayerNode_8bdfe758[start]": {
-      "source_node_id": "PrintNode_46803d09",
+    "PrintNode_48957702[done]->ClipPlayerNode_0a505e98[start]": {
+      "source_node_id": "PrintNode_48957702",
       "outlet_port_id": "done",
-      "sink_node_id": "ClipPlayerNode_8bdfe758",
+      "sink_node_id": "ClipPlayerNode_0a505e98",
       "inlet_port_id": "start",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "TranscribeNode_4e6c8d99[text]->SpeakNode_59fdbc01[text]": {
-      "source_node_id": "TranscribeNode_4e6c8d99",
+    "TranscribeNode_d5d87a00[text]->SpeakNode_b5bb699d[text]": {
+      "source_node_id": "TranscribeNode_d5d87a00",
       "outlet_port_id": "text",
-      "sink_node_id": "SpeakNode_59fdbc01",
+      "sink_node_id": "SpeakNode_b5bb699d",
       "inlet_port_id": "text",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "LoadSpeechModelNode_bb8dcb4d[loaded]->SpeakNode_59fdbc01[model]": {
-      "source_node_id": "LoadSpeechModelNode_bb8dcb4d",
+    "LoadSpeechModelNode_c455dfae[loaded]->SpeakNode_b5bb699d[model]": {
+      "source_node_id": "LoadSpeechModelNode_c455dfae",
       "outlet_port_id": "loaded",
-      "sink_node_id": "SpeakNode_59fdbc01",
+      "sink_node_id": "SpeakNode_b5bb699d",
       "inlet_port_id": "model",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "SpeakNode_59fdbc01[audio]->ClipPlayerNode_8bdfe758[clip]": {
-      "source_node_id": "SpeakNode_59fdbc01",
+    "SpeakNode_b5bb699d[audio]->ClipPlayerNode_0a505e98[clip]": {
+      "source_node_id": "SpeakNode_b5bb699d",
       "outlet_port_id": "audio",
-      "sink_node_id": "ClipPlayerNode_8bdfe758",
+      "sink_node_id": "ClipPlayerNode_0a505e98",
       "inlet_port_id": "clip",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "AudioEventNode_cd16c9eb[listen_callback]->ClipPlayerNode_8bdfe758[callbacks]": {
-      "source_node_id": "AudioEventNode_cd16c9eb",
+    "AudioEventNode_4173c0c6[listen_callback]->ClipPlayerNode_0a505e98[callbacks]": {
+      "source_node_id": "AudioEventNode_4173c0c6",
       "outlet_port_id": "listen_callback",
-      "sink_node_id": "ClipPlayerNode_8bdfe758",
+      "sink_node_id": "ClipPlayerNode_0a505e98",
       "inlet_port_id": "callbacks",
       "chain_adapter_keys": []
     },
-    "AudioEventNode_cd16c9eb[block_ready]->DeviceOutNode_173a3f3f[write]": {
-      "source_node_id": "AudioEventNode_cd16c9eb",
+    "AudioEventNode_4173c0c6[block_ready]->DeviceOutNode_3c245c6a[write]": {
+      "source_node_id": "AudioEventNode_4173c0c6",
       "outlet_port_id": "block_ready",
-      "sink_node_id": "DeviceOutNode_173a3f3f",
+      "sink_node_id": "DeviceOutNode_3c245c6a",
       "inlet_port_id": "write",
       "chain_adapter_keys": [],
       "propagation": "eager"
     },
-    "AudioEventNode_cd16c9eb[audio]->DeviceOutNode_173a3f3f[audio]": {
-      "source_node_id": "AudioEventNode_cd16c9eb",
+    "AudioEventNode_4173c0c6[audio]->DeviceOutNode_3c245c6a[audio]": {
+      "source_node_id": "AudioEventNode_4173c0c6",
       "outlet_port_id": "audio",
-      "sink_node_id": "DeviceOutNode_173a3f3f",
+      "sink_node_id": "DeviceOutNode_3c245c6a",
       "inlet_port_id": "audio",
       "chain_adapter_keys": [],
       "propagation": "eager"

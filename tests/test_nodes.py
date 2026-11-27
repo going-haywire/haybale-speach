@@ -315,7 +315,7 @@ def test_speak_turns_text_into_a_mono_clip(
     load, speak, model = _loaded_tts(graph, model_file)
     assert load.status.loaded == "fake-whisper.bin · kokoro-onnx · cpu"
 
-    speak.worker(MagicMock(cancel=None), "Hello. How are you?", model, None, "af_heart", 1.25)
+    speak.worker(MagicMock(cancel=None), "Hello. How are you?", model, None, 1.25)
 
     clip = speak.ports["audio"].get_value()
     assert (clip.channels, clip.sample_rate) == (1, 24000)
@@ -331,7 +331,8 @@ def test_speak_names_the_voices_of_the_model_for_an_unknown_one(
 ) -> None:
     load, speak, model = _loaded_tts(graph, model_file)
     with pytest.raises(ValueError, match="has no voice 'zz_nobody'; it has af_heart, bf_emma"):
-        speak.worker(MagicMock(cancel=None), "Hello.", model, None, "zz_nobody", 1.0)
+        speak.settings.voice_name = "zz_nobody"
+        speak.worker(MagicMock(cancel=None), "Hello.", model, None, 1.0)
     load.on_shutdown(MagicMock())
 
 
@@ -339,13 +340,14 @@ def test_a_picked_voice_takes_the_place_of_the_voice_name(
     graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
 ) -> None:
     load, pick, model = _loaded_tts(graph, model_file, PICK)
-    pick.worker(MagicMock(), model, "bf_emma")
+    pick.settings.voice_name = "bf_emma"
+    pick.worker(MagicMock(), model)
     voice = pick.ports["voice"].get_value()
     assert (voice.name, voice.language, voice.backend) == ("bf_emma", "en-gb", "kokoro-onnx")
     assert pick.ports["language"].get_value() == "en-gb"
 
     speak = add_node(graph, *SPEAK)
-    speak.worker(MagicMock(cancel=None), "Cheerio.", model, voice, "af_heart", 1.0)
+    speak.worker(MagicMock(cancel=None), "Cheerio.", model, voice, 1.0)
     assert model.engine.calls == [("Cheerio.", 1.0, "en-gb")]
     assert float(speak.ports["audio"].get_value().data.max()) == 0.0  # bf_emma's style, not af_heart's
     load.on_shutdown(MagicMock())
@@ -354,7 +356,7 @@ def test_a_picked_voice_takes_the_place_of_the_voice_name(
 def test_speak_without_a_model_is_an_error(graph: Any) -> None:
     speak = add_node(graph, *SPEAK)
     with pytest.raises(ValueError, match="no model"):
-        speak.worker(MagicMock(cancel=None), "Hello.", None, None, "af_heart", 1.0)
+        speak.worker(MagicMock(cancel=None), "Hello.", None, None, 1.0)
 
 
 def test_a_tts_model_does_not_fit_transcribe(
@@ -450,16 +452,55 @@ def test_the_deprecated_collect_clip_still_feeds_transcribe(graph: Any) -> None:
     assert edge.state.is_valid()
 
 
-def test_pick_voice_picks_another_voice_while_the_graph_runs(
+def test_a_changed_voice_name_is_picked_at_the_next_run(
     graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
 ) -> None:
-    """A changed Voice Name is picked at the next execution, though no inlet changed."""
+    """A settings write marks no port dirty; Pick Voice still runs again, as the graph runs."""
     load, pick, model = _loaded_tts(graph, model_file, PICK)
-    pick.ports["model"].set_value(model)
     pick._execute(MagicMock())
     assert pick.ports["voice"].get_value().name == "af_heart"
-    pick._execute(MagicMock())  # nothing changed: the node does not run
-    pick.ports["voice_name"].set_value("bf_emma")
+    pick.settings.voice_name = "bf_emma"  # the Properties panel
     pick._execute(MagicMock())
     assert pick.ports["voice"].get_value().name == "bf_emma"
+    pick.ports["settings.voice_name"].set_value("af_heart")  # the card's config port
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
     load.on_shutdown(MagicMock())
+
+
+def test_voice_name_promotes_to_an_inlet_that_chooses_the_voice(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
+) -> None:
+    from haywire.api import PortType
+    from haywire.core.node.promotion import demote_setting, promote_setting
+
+    load, pick, model = _loaded_tts(graph, model_file, PICK)
+    demote_setting(pick, "settings.voice_name")  # a config port by default
+    promote_setting(pick, "settings", "voice_name", direction=PortType.INLET)
+    text = add_node(graph, *TRANSCRIBE)  # any STRING outlet
+    edge = graph.create_edge_wrapper(text.node_id, "text", pick.node_id, "settings.voice_name")
+    graph.force_validation()
+    assert edge.state.is_valid()
+    text.out("text", "bf_emma")
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "bf_emma"
+    text.out("text", "af_heart")  # a new value on the wire, while the graph runs
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
+    load.on_shutdown(MagicMock())
+
+
+def test_voice_name_promotes_to_an_outlet_that_passes_it_on(graph: Any) -> None:
+    from haywire.api import PortType
+    from haywire.core.node.promotion import demote_setting, promote_setting
+
+    speak = add_node(graph, *SPEAK)
+    printer = add_node(graph, "haybale_core.nodes.print", "PrintNode")
+    demote_setting(speak, "settings.voice_name")
+    promote_setting(speak, "settings", "voice_name", direction=PortType.OUTLET)
+    edge = graph.create_edge_wrapper(speak.node_id, "settings.voice_name", printer.node_id, "message")
+    graph.force_validation()
+    assert edge.state.is_valid()
+    speak.settings.voice_name = "bf_emma"
+    printer._execute(MagicMock(control_pin="exec"))
+    assert printer.ports["message"].get_value() == "bf_emma"
