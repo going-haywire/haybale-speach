@@ -2,7 +2,7 @@
 
 Each backend is a module next to this one with ``BACKEND``, ``KIND`` (``stt`` or ``tts``),
 ``REQUIRES`` (the import that must work), ``resolve(device, compute_type)`` →
-``(device, compute_type, notes)``, ``load(path, device, compute_type, threads, *, name, notes)``
+``(device, compute_type, notes)``, ``load(path, device, compute_type, threads, *, name, notes, workers)``
 and ``release(model)``. Load Speech Model picks the module from the resolved catalog variant,
 or for a plain file from the kind its outlet takes.
 """

@@ -34,11 +34,12 @@ NOT_LOADED = "< shows after the first run >"
 
 
 class LoadSpeechModelSettings(NodeSettings):
-    """Device, compute type and threads of one Load Speech Model node."""
+    """Device, compute type, threads and workers of one Load Speech Model node."""
 
     device = shadow(SpeechSettings.device)
     compute_type = shadow(SpeechSettings.compute_type)
     threads = shadow(SpeechSettings.threads)
+    workers = shadow(SpeechSettings.workers)
 
 
 class LoadSpeechModelStatus(NodeSettings):
@@ -85,7 +86,7 @@ class BaseSpeechLoaderNode(BaseNode):
         self.settings._subscribe(self._on_settings_changed)
 
     def _on_settings_changed(self, name: str, value: Any, old: Any) -> None:
-        """Another device, compute type or thread count needs another load: run at the next execution."""
+        """Another device, compute type, thread or worker count needs another load: run at the next execution."""
         self.run_again()
 
     def worker(self, context: ExecutionContext, model: ModelRef | None = None) -> None:
@@ -115,13 +116,16 @@ class BaseSpeechLoaderNode(BaseNode):
         if not compute_type and resolved.resource is not None:
             compute_type = resolved.resource.precision or ""
         threads = int(self.settings.threads)
-        key = (resolved.key, (backend.name, device, compute_type, threads))
+        workers = max(1, int(self.settings.workers))
+        key = (resolved.key, (backend.name, device, compute_type, threads, workers))
         if getattr(self.cache, "key", None) != key:
             self._let_go()
         loaded = models_state().pool.acquire(
             key,
             self,
-            load=lambda: runtime.load(resolved.path, device, compute_type, threads, name=name, notes=notes),
+            load=lambda: runtime.load(
+                resolved.path, device, compute_type, threads, name=name, notes=notes, workers=workers
+            ),
             release=runtime.release,
         )
         self.cache.key = key
@@ -230,8 +234,12 @@ class LoadSpeechModelNode(BaseSpeechLoaderNode):
       and `float16` on a GPU. A format the device cannot run falls back to `float32`, with a
       note. kokoro-onnx runs the precision of the model file, and notes any other choice.
     - `CPU threads`: `0` lets the engine choose.
+    - `Workers`: how many clips the model works on at once, for flows that share it, such as
+      Clip Events set to Pooled behind one Clip Segmenter. `1` runs one at a time. More only
+      helps while cores are idle: each run shares the CPU threads. faster-whisper gets it as
+      `num_workers`, at one model's memory.
 
-    All three default to the library's *Speech* settings. Nodes that pick the same model with
+    All four default to the library's *Speech* settings. Nodes that pick the same model with
     the same settings share one loaded copy. The model is loaded when the graph runs and freed
     when it stops.
     """

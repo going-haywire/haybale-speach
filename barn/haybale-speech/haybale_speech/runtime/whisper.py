@@ -27,7 +27,14 @@ class Cancelled(Exception):
 
 
 def load_whisper(
-    path: Path, device: str, compute_type: str, threads: int, *, name: str, notes: tuple[str, ...] = ()
+    path: Path,
+    device: str,
+    compute_type: str,
+    threads: int,
+    *,
+    name: str,
+    notes: tuple[str, ...] = (),
+    workers: int = 1,
 ) -> SttModel:
     """Load the CTranslate2 Whisper model in the folder *path*.
 
@@ -40,16 +47,28 @@ def load_whisper(
         threads: CPU threads; ``0`` lets CTranslate2 choose.
         name: The model's name for the card.
         notes: Notes from resolving the device and compute type, kept for the card.
+        workers: Clips the model transcribes at once (faster-whisper's ``num_workers``).
     """
     from faster_whisper import WhisperModel
 
     if not (path / "model.bin").is_file():
         raise ValueError(f"{path.name} is not a CTranslate2 Whisper model folder (no model.bin)")
     engine = WhisperModel(
-        str(path), device=device, compute_type=compute_type, cpu_threads=threads, local_files_only=True
+        str(path),
+        device=device,
+        compute_type=compute_type,
+        cpu_threads=threads,
+        num_workers=max(1, workers),
+        local_files_only=True,
     )
     return SttModel(
-        engine=engine, backend=BACKEND, device=device, compute_type=compute_type, name=name, notes=notes
+        engine=engine,
+        backend=BACKEND,
+        device=device,
+        compute_type=compute_type,
+        name=name,
+        notes=notes,
+        workers=max(1, workers),
     )
 
 
@@ -91,7 +110,7 @@ def transcribe(
         Cancelled: *cancel* was set.
     """
     duration = len(samples) / model.sample_rate
-    with model.lock:
+    with model.slots:  # faster-whisper runs as many clips at once as it has workers
         segments, info = model.engine.transcribe(samples, language=language or None)
         found = collect_segments(segments, duration, cancel=cancel, on_progress=on_progress)
     return Transcript.from_segments(found, str(info.language or language or ""), duration)

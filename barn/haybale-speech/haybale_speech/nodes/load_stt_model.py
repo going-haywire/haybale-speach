@@ -26,7 +26,7 @@ class LoadSttModelNode(BaseSpeechLoaderNode):
     Model, which takes the kind of model the node it feeds needs.
 
     Pick the model on the card: a catalog entry, such as *Whisper small*. The settings
-    `Device`, `Compute type` and `CPU threads` are those of Load Speech Model.
+    `Device`, `Compute type`, `CPU threads` and `Workers` are those of Load Speech Model.
     """
 
     def init(self) -> None:

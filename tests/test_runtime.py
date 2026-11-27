@@ -1,4 +1,4 @@
-"""The runtime pieces without a model: audio conversion, the clip buffer, devices, segments."""
+"""The runtime pieces without a model: audio conversion, devices, segments."""
 
 from __future__ import annotations
 
@@ -12,17 +12,12 @@ import pytest
 from haybale_audio.value import AudioBlock
 
 from haybale_speech.runtime.audio import model_input
-from haybale_speech.runtime.clip import ClipBuffer
 from haybale_speech.runtime import devices
 from haybale_speech.runtime.devices import NO_CUDA_DEVICE, cuda_problem, resolve_compute_type, resolve_device
 from haybale_speech.runtime.whisper import Cancelled, collect_segments, transcribe
 from haybale_speech.value import Segment, SttModel, Transcript
 
 pytestmark = pytest.mark.unit
-
-
-def _block(channels: int, frames: int, rate: int, value: float = 0.0) -> AudioBlock:
-    return AudioBlock(np.full((channels, frames), value, np.float32), rate)
 
 
 def test_model_input_mixes_stereo_to_mono() -> None:
@@ -40,37 +35,6 @@ def test_model_input_resamples_the_whole_clip() -> None:
     assert out.dtype == np.float32
     assert abs(len(out) - 16000) <= 2  # one second in, one second out: no tail held back
     assert 0.6 < float(np.abs(out).max()) < 1.1
-
-
-def test_clip_buffer_joins_blocks_and_starts_over() -> None:
-    buffer = ClipBuffer(max_seconds=10)
-    assert buffer.take() is None
-    assert buffer.add(_block(2, 100, 1000, 0.1))
-    assert buffer.add(_block(2, 50, 1000, 0.2))
-    assert buffer.seconds == pytest.approx(0.15)
-    clip = buffer.take()
-    assert clip is not None
-    assert (clip.channels, clip.frames, clip.sample_rate) == (2, 150, 1000)
-    assert np.allclose(clip.data[:, 100:], 0.2)
-    assert buffer.take() is None
-    assert buffer.add(_block(1, 10, 8000))  # a new clip takes a new format
-
-
-def test_clip_buffer_refuses_another_format() -> None:
-    buffer = ClipBuffer(max_seconds=10)
-    buffer.add(_block(1, 100, 16000))
-    with pytest.raises(ValueError, match="1 ch at 16000 Hz"):
-        buffer.add(_block(1, 100, 48000))
-
-
-def test_clip_buffer_drops_blocks_past_the_limit() -> None:
-    buffer = ClipBuffer(max_seconds=0.25)
-    assert buffer.add(_block(1, 200, 1000))
-    assert not buffer.add(_block(1, 100, 1000))
-    assert buffer.dropped == 1
-    clip = buffer.take()
-    assert clip is not None and clip.frames == 200
-    assert buffer.dropped == 0
 
 
 BROKEN = "libcublas.so.12 is not found (cuBLAS for CUDA 12)"

@@ -1,19 +1,28 @@
-"""Speech Segmenter — cuts a live audio flow into speech clips at the pauses."""
+"""Speech Segmenter — the clip cutter of 0.0.2, kept so saved graphs load. Use Clip Segmenter."""
 
 from __future__ import annotations
 
 import time
 
+from haybale_audio.dsp.segmenter import Segmenter
 from haybale_audio.emitter import STATUS_INTERVAL, deliver_to_subscribers, set_status
 from haybale_audio.value import AudioBlock
 from haywire.api import FLOAT, INT, STRING, BaseNode, ExecutionContext, LabelWidget, NodeType, node
 
-from haybale_speech.runtime.segmenter import Segmenter, speech_clip
+from haybale_speech.runtime.audio import model_input
+
+#: The sample rate of the clips the segmenter sends: the rate speech models take.
+SPEECH_RATE = 16000
+
+
+def speech_clip(segment: AudioBlock) -> AudioBlock:
+    """Return *segment* mixed to mono and resampled to :data:`SPEECH_RATE`, as one block."""
+    return AudioBlock(model_input(segment, SPEECH_RATE)[None, :], SPEECH_RATE)
 
 
 @node(
     label="Speech Segmenter",
-    description="Cuts a live audio flow into speech clips at the pauses, for Transcribe",
+    description="Cuts a live audio flow into speech clips for Audio Events; replaced by Clip Segmenter",
     menu="speech",
     search_tags=[
         "audio",
@@ -28,9 +37,18 @@ from haybale_speech.runtime.segmenter import Segmenter, speech_clip
         "microphone",
     ],
     node_type=NodeType.CONTROL,
+    deprecation_warning=(
+        "Speech Segmenter is replaced by Clip Segmenter (haybale-audio, menu audio/clip): its clips go "
+        "to Clip Events, whose Clip connects to Transcribe"
+    ),
 )
 class SpeechSegmenterNode(BaseNode):
-    """Listens to an audio flow and sends each stretch of speech as a clip: mono, 16 kHz.
+    """Sends each stretch of speech in an audio flow to Audio Events, as a mono 16 kHz block.
+    Replaced by Clip Segmenter.
+
+    Graphs saved with it keep loading, but an Audio Event's `Audio` no longer connects to
+    Transcribe, which takes an Audio Clip: rebuild such a graph with haybale-audio's Clip
+    Segmenter and a Clip Event, whose `Clip` goes to Transcribe.
 
     A block is loud when its level (RMS) is above `Threshold`. The first loud block opens a
     segment, together with the `Pre-roll` before it, so a quiet first sound is kept. A pause
@@ -38,14 +56,6 @@ class SpeechSegmenterNode(BaseNode):
     `Subscribers`; the pause itself is left out. Speech shorter than `Min Seconds` (a click, a
     cough) is discarded; a segment that reaches `Max Seconds` is sent at once and the next loud
     block opens a new one. The status shows the level, which helps to set the threshold.
-
-    The clip arrives in a flow of its own, so transcribing it never holds up the audio flow,
-    however long the model takes:
-
-    ```text
-    Device In → Audio Event → Speech Segmenter (Add)
-    Speech Segmenter (Subscribers) ← Audio Event → Print, with Transcribe's Text as the message
-    ```
 
     The listening Audio Event's `Audio` is the clip, its `Timestamp` the start of the speech in
     seconds since the segmenter's first block, and its `Block Number` the count of clips sent.

@@ -1,4 +1,7 @@
-"""The segmenter and the Speech Segmenter node, on synthetic blocks: a tone for speech, silence for pauses."""
+"""The deprecated Speech Segmenter node, on synthetic blocks: a tone for speech, silence for pauses.
+
+The segmenting itself is haybale-audio's (``haybale_audio.dsp.segmenter``), tested there.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +13,7 @@ import numpy as np
 import pytest
 from haybale_audio.value import AudioBlock
 
-from haybale_speech.runtime.segmenter import SPEECH_RATE, Segment, Segmenter, rms, speech_clip
+from haybale_speech.nodes.speech_segmenter import SPEECH_RATE, speech_clip
 from tests.conftest import add_node
 
 RATE = 48000
@@ -29,80 +32,6 @@ def _tone(blocks: int = 1, channels: int = 1, amplitude: float = 0.1) -> list[Au
 
 def _silence(blocks: int = 1, channels: int = 1, level: float = 0.0) -> list[AudioBlock]:
     return [AudioBlock(np.full((channels, BLOCK), level, np.float32), RATE) for _ in range(blocks)]
-
-
-def _feed(segmenter: Segmenter, blocks: list[AudioBlock]) -> list[Segment]:
-    return [s for s in (segmenter.feed(b) for b in blocks) if s is not None]
-
-
-@pytest.mark.unit
-def test_rms_of_a_tone_and_of_silence() -> None:
-    assert rms(_tone(amplitude=0.1)[0]) == pytest.approx(0.1 / np.sqrt(2), rel=0.01)
-    assert rms(_silence()[0]) == 0.0
-    assert rms(AudioBlock(np.zeros((1, 0), np.float32), RATE)) == 0.0
-
-
-@pytest.mark.unit
-def test_a_pause_of_the_hangover_ends_the_segment_without_the_pause() -> None:
-    seg = Segmenter(threshold=0.01, hangover=0.1, preroll=0.0, min_length=0.0)
-    out = _feed(seg, _silence(5) + _tone(30) + _silence(9))
-    assert out == []
-    assert seg.speaking
-    (segment,) = _feed(seg, _silence(1))  # the 10th silent block: 100 ms
-    assert segment.audio.frames == 30 * BLOCK  # the tone only, the pause left out
-    assert segment.start == pytest.approx(5 * BLOCK / RATE)
-    assert not seg.speaking
-    assert seg.sent == 1
-
-
-@pytest.mark.unit
-def test_a_pause_shorter_than_the_hangover_stays_in_the_segment() -> None:
-    seg = Segmenter(threshold=0.01, hangover=0.1, preroll=0.0, min_length=0.0)
-    (segment,) = _feed(seg, _tone(20) + _silence(5) + _tone(20) + _silence(10))
-    assert segment.audio.frames == 45 * BLOCK
-    assert np.allclose(segment.audio.data[:, 20 * BLOCK : 25 * BLOCK], 0.0)
-
-
-@pytest.mark.unit
-def test_the_preroll_keeps_the_blocks_before_the_first_loud_one() -> None:
-    seg = Segmenter(threshold=0.01, hangover=0.1, preroll=0.05, min_length=0.0)
-    quiet = _silence(20, level=0.005)  # below the threshold, like a soft onset
-    (segment,) = _feed(seg, quiet + _tone(30) + _silence(10))
-    assert segment.audio.frames == (5 + 30) * BLOCK  # 50 ms of pre-roll
-    assert np.allclose(segment.audio.data[:, : 5 * BLOCK], 0.005)
-    assert segment.start == pytest.approx(15 * BLOCK / RATE)
-
-
-@pytest.mark.unit
-def test_speech_shorter_than_the_minimum_is_discarded() -> None:
-    seg = Segmenter(threshold=0.01, hangover=0.1, preroll=0.05, min_length=0.2)
-    # 15 tone blocks are 150 ms: with the 50 ms pre-roll the clip would reach 200 ms, but the
-    # minimum counts the speech alone.
-    assert _feed(seg, _silence(10) + _tone(15) + _silence(10)) == []
-    assert seg.discarded == 1
-    (segment,) = _feed(seg, _tone(20) + _silence(10))
-    assert segment.audio.frames == (5 + 20) * BLOCK
-    assert seg.sent == 1
-
-
-@pytest.mark.unit
-def test_a_segment_reaching_the_maximum_is_sent_and_the_speech_goes_on_in_a_new_one() -> None:
-    seg = Segmenter(threshold=0.01, hangover=0.1, preroll=0.0, min_length=0.0, max_length=0.5)
-    first, second = _feed(seg, _tone(80) + _silence(10))
-    assert first.audio.frames == 50 * BLOCK
-    assert second.audio.frames == 30 * BLOCK
-    assert second.start == pytest.approx(0.5)
-
-
-@pytest.mark.unit
-def test_a_block_of_another_rate_is_an_error_and_reset_starts_over() -> None:
-    seg = Segmenter()
-    seg.feed(_tone()[0])
-    with pytest.raises(ValueError, match="16000 Hz"):
-        seg.feed(AudioBlock(np.zeros((1, 160), np.float32), 16000))
-    seg.reset()
-    assert not seg.speaking and seg.sent == 0
-    seg.feed(AudioBlock(np.zeros((1, 160), np.float32), 16000))  # a new stream takes a new rate
 
 
 @pytest.mark.unit

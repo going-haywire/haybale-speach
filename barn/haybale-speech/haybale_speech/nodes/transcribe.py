@@ -39,8 +39,9 @@ class TranscribeProgress(ProgressSettings):
 class TranscribeNode(BaseNode):
     """Turns the speech in an audio clip into text with a loaded model.
 
-    Connect `Model` to Load Speech Model and `Audio` to a clip, such as Collect Clip's. Any channel
-    count and sample rate will do: the clip is mixed to mono and resampled to the model's rate.
+    Connect `Model` to Load Speech Model and `Clip` to an audio clip, such as a Clip Event's (fed
+    by Clip Segmenter) or Collect Clip's. Any channel count and sample rate will do: the clip is
+    mixed to mono and resampled to the model's rate.
 
     - `Language`: `auto` detects it; a code such as `en` or `de` skips detection and is
       more reliable on short clips.
@@ -52,12 +53,12 @@ class TranscribeNode(BaseNode):
     progress = bag(TranscribeProgress)
 
     def init(self) -> None:
-        from haybale_audio.types.audio import AUDIO
+        from haybale_audio.types.audio_clip import AUDIO_CLIP
 
         from haybale_speech.types.stt_model import STT_MODEL
         from haybale_speech.types.transcript import TRANSCRIPT
 
-        self.add(AUDIO.as_inlet("audio", label="Audio", description="The clip to transcribe"))
+        self.add(AUDIO_CLIP.as_inlet("audio", label="Clip", description="The clip to transcribe"))
         self.add(STT_MODEL.as_inlet("model", label="Model", description="A loaded speech-to-text model"))
         self.add(
             STRING.as_config(

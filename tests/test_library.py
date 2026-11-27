@@ -69,6 +69,18 @@ def test_load_stt_model_is_deprecated_for_load_speech_model(library_system: Any)
     assert "Load Speech Model" in LoadSttModelNode.class_identity.deprecation_warning
 
 
+def test_the_speech_copies_of_the_clip_nodes_are_deprecated_for_haybale_audios(library_system: Any) -> None:
+    from haybale_audio.nodes.collect_clip import CollectClipNode as AudioCollectClip
+
+    from haybale_speech.nodes.collect_clip import CollectClipNode
+    from haybale_speech.nodes.speech_segmenter import SpeechSegmenterNode
+
+    assert issubclass(CollectClipNode, AudioCollectClip)
+    assert CollectClipNode.class_identity.registry_key == "haybale-speech:node:CollectClipNode"
+    assert "haybale-audio" in CollectClipNode.class_identity.deprecation_warning
+    assert "Clip Segmenter" in SpeechSegmenterNode.class_identity.deprecation_warning
+
+
 def test_the_speech_settings_have_a_panel(library_system: Any) -> None:
     registry = library_system.get_panel_registry()
     assert registry.get("haybale-speech:panel:SpeechSettingsPanel") is not None

@@ -2,7 +2,7 @@
 
 `haybale-speech:panel:SpeechSettingsPanel` · kind: panel
 
-Device, compute type and threads for speech models.
+Device, compute type, threads and workers for speech models.
 
 ## Details
 
@@ -11,4 +11,4 @@ Device, compute type and threads for speech models.
 
 ## Notes
 
-Device, compute type and threads for speech models.
+Device, compute type, threads and workers for speech models.

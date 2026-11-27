@@ -14,7 +14,7 @@ Turns text into an audio clip with a loaded text-to-speech model
 | `voice_name` | config | `haywire-core:type:STRING` | The model's voice to speak with, while no Voice is wired |
 | `speed` | config | `haywire-core:type:FLOAT` | 0.5 to 2.0; 1.0 is the voice's own pace |
 | `progress.main` | config | `haywire-core:type:PROGRESS` |  |
-| `audio` | outlet | `haybale-audio:type:AUDIO` | The spoken clip, mono |
+| `audio` | outlet | `haybale-audio:type:AUDIO_CLIP` | The spoken clip, mono |
 | `seconds` | outlet | `haywire-core:type:FLOAT` | Length of the clip |
 
 ## Settings
@@ -35,5 +35,5 @@ Connect `Model` to Load Speech Model and `Text` to the text to speak, such as Tr
   Voice, takes its place.
 - `Speed`: 0.5 to 2.0; 1.0 is the voice's own pace.
 
-`Audio` is the spoken clip and `Seconds` its length. The text is spoken one sentence at a
-time; stopping the graph stops after the current sentence.
+`Clip` is the spoken clip and `Seconds` its length; Clip Player plays it. The text is spoken
+one sentence at a time; stopping the graph stops after the current sentence.

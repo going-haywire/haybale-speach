@@ -59,7 +59,7 @@ def fake_load(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     calls: list[tuple[Any, ...]] = []
 
     def load(path: Path, device: str, compute_type: str, threads: int, **kwargs: Any) -> SttModel:
-        calls.append((path, device, compute_type, threads))
+        calls.append((path, device, compute_type, threads, kwargs["workers"]))
         return SttModel(
             engine=_FakeEngine(),
             backend="faster-whisper",
@@ -67,6 +67,7 @@ def fake_load(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
             compute_type=compute_type,
             name=kwargs["name"],
             notes=kwargs.get("notes", ()),
+            workers=kwargs["workers"],
         )
 
     monkeypatch.setattr(whisper, "load", load)
@@ -81,7 +82,7 @@ def fake_kokoro(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     calls: list[tuple[Any, ...]] = []
 
     def load(path: Path, device: str, compute_type: str, threads: int, **kwargs: Any) -> TtsModel:
-        calls.append((path, device, compute_type, threads))
+        calls.append((path, device, compute_type, threads, kwargs["workers"]))
         engine = _FakeKokoro()
         return TtsModel(
             engine=engine,
@@ -151,8 +152,8 @@ def test_a_clip_transcribes_through_the_loaded_model(
     assert result.language == "de"
     assert result.duration == pytest.approx(1.0)
     assert len(fake_load) == 1
-    _path, device, compute_type, threads = fake_load[0]
-    assert (device, compute_type, threads) == ("cpu", "int8", 0)
+    _path, device, compute_type, threads, workers = fake_load[0]
+    assert (device, compute_type, threads, workers) == ("cpu", "int8", 0, 1)
     assert load.status.loaded == "< shows after the first run >"  # released when the run ended
     assert _pool().entries() == []
 
@@ -403,3 +404,47 @@ def test_collect_clip_drops_blocks_past_max_seconds(graph: Any) -> None:
     assert clip.ports["status"].get_value() == "Full at 0.2 s — 1 blocks dropped"
     clip.worker(_context("stop"))
     assert clip.ports["clip"].get_value().frames == 3200
+
+
+def test_workers_reach_the_backend_and_another_count_loads_another_model(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_load: list[tuple[Any, ...]]
+) -> None:
+    begin, load, transcribe, _ = _graph(graph)
+    load.ports["model"].set_value(place_model(model_file))
+    transcribe.ports["audio"].set_value(AudioBlock(np.zeros((1, 16000), np.float32), 16000))
+    load.settings.workers = 2
+    run_from(graph, begin)
+    assert fake_load[-1][4] == 2
+    load.settings.workers = 3
+    run_from(graph, begin)
+    assert [call[4] for call in fake_load] == [2, 3]  # the pool key holds the count
+
+
+def test_transcribe_and_speak_take_and_give_audio_clips(graph: Any) -> None:
+    from haybale_audio.types.audio_clip import AUDIO_CLIP
+
+    transcribe = add_node(graph, *TRANSCRIBE)
+    speak = add_node(graph, *SPEAK)
+    assert transcribe.ports["audio"].type_cls is AUDIO_CLIP
+    assert speak.ports["audio"].type_cls is AUDIO_CLIP
+    assert transcribe.ports["audio"].label == speak.ports["audio"].label == "Clip"
+
+
+def test_speak_feeds_a_clip_player_and_an_audio_block_does_not_feed_transcribe(graph: Any) -> None:
+    speak = add_node(graph, *SPEAK)
+    player = add_node(graph, "haybale_audio.nodes.clip_player", "ClipPlayerNode")
+    event = add_node(graph, "haybale_audio.nodes.audio_event", "AudioEventNode")
+    transcribe = add_node(graph, *TRANSCRIBE)
+    good = graph.create_edge_wrapper(speak.node_id, "audio", player.node_id, "clip")
+    bad = graph.create_edge_wrapper(event.node_id, "audio", transcribe.node_id, "audio")
+    graph.force_validation()
+    assert good.state.is_valid()
+    assert bad is None or not bad.state.is_valid()
+
+
+def test_the_deprecated_collect_clip_still_feeds_transcribe(graph: Any) -> None:
+    clip = add_node(graph, *CLIP)
+    transcribe = add_node(graph, *TRANSCRIBE)
+    edge = graph.create_edge_wrapper(clip.node_id, "clip", transcribe.node_id, "audio")
+    graph.force_validation()
+    assert edge.state.is_valid()

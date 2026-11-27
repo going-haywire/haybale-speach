@@ -60,14 +60,14 @@ class SpeakNode(BaseNode):
       Voice, takes its place.
     - `Speed`: 0.5 to 2.0; 1.0 is the voice's own pace.
 
-    `Audio` is the spoken clip and `Seconds` its length. The text is spoken one sentence at a
-    time; stopping the graph stops after the current sentence.
+    `Clip` is the spoken clip and `Seconds` its length; Clip Player plays it. The text is spoken
+    one sentence at a time; stopping the graph stops after the current sentence.
     """
 
     progress = bag(SpeakProgress)
 
     def init(self) -> None:
-        from haybale_audio.types.audio import AUDIO
+        from haybale_audio.types.audio_clip import AUDIO_CLIP
 
         from haybale_speech.types.tts_model import TTS_MODEL
         from haybale_speech.types.voice import VOICE
@@ -100,7 +100,7 @@ class SpeakNode(BaseNode):
                 description="0.5 to 2.0; 1.0 is the voice's own pace",
             )
         )
-        self.add(AUDIO.as_outlet("audio", label="Audio", description="The spoken clip, mono"))
+        self.add(AUDIO_CLIP.as_outlet("audio", label="Clip", description="The spoken clip, mono"))
         self.add(FLOAT.as_outlet("seconds", label="Seconds", description="Length of the clip"))
 
     def worker(

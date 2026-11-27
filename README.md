@@ -33,6 +33,21 @@ Kokoro 82M is Apache-2.0.
 uv sync
 uv run haywire
 ```
+## Demos
+
+Two graphs in `examples/`; open them in the studio. Both listen to the default input device,
+cut it into one clip per sentence with Clip Segmenter (haybale-audio) and transcribe each clip
+with Whisper small.
+
+- `live_speech_to_text.haywire` prints what it hears.
+- `speech_round_trip.haywire` also speaks it back with Kokoro 82M and plays it on the default
+  output device: Device In → Audio Event → Clip Segmenter → Clip Event → Transcribe → Speak →
+  Clip Player → Audio Event → Device Out. **Use headphones**: through speakers the microphone
+  hears the reply and the circle never ends. A reply that comes while the last one plays cuts
+  it off.
+
+Both models are catalog entries; fetch them in the Models editor first.
+
 ## Share your library
 
 `haywire share` releases the project: it bumps every file to the version, writes
