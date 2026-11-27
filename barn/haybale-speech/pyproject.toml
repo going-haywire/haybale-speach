@@ -19,9 +19,13 @@ dependencies = [
     "haybale-core>=0.6.1",
     "haybale-models>=0.6.1",
     "faster-whisper>=1.2.1",
-    "numpy>=1.26",  # the first numpy with Python 3.12 wheels
+    "numpy>=2.0.2",  # kokoro-onnx 0.6.1 needs numpy>=2.0.2
     "samplerate>=0.2.4",
     "ctranslate2>=4.0",  # faster-whisper 1.2.1 needs ctranslate2>=4.0
+    # Text-to-speech. kokoro-onnx caps Python below 3.14; there Load Speech Model says the
+    # backend is not installed and speech-to-text keeps working.
+    "kokoro-onnx>=0.6.1; python_version < '3.14'",
+    "onnxruntime>=1.20.1; python_version < '3.14'",
 ]
 
 # The key is the entry-point name (unique within the group; need not match the

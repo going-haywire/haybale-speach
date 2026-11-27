@@ -1,10 +1,10 @@
-"""Haybale-Speech: speech-to-text for audio clips.
+"""Haybale-Speech: speech-to-text for audio clips, and text-to-speech.
 
 Component folders (registered in ``register_components``):
   - ``settings``, ``types``, ``nodes``, ``catalog`` and the scaffold's other folders.
 
-``runtime`` holds the faster-whisper code the nodes call; it loads the engine only when a
-model runs.
+``runtime`` holds the backend code the nodes call (faster-whisper, kokoro-onnx; the table is
+``runtime/backends.py``); it loads an engine only when a model runs.
 """
 
 from pathlib import Path
@@ -29,7 +29,7 @@ from haywire.api.workbench import EditorRegistry, StateRegistry, PanelRegistry
     file_watcher=True,
 )
 class Library(BaseLibrary):
-    """Speech library — load speech models and turn audio clips into text."""
+    """Speech library — load speech models, turn audio clips into text and text into audio."""
 
     def register_components(self):
         """Register all components with the global registries."""

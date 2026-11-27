@@ -39,7 +39,7 @@ class TranscribeProgress(ProgressSettings):
 class TranscribeNode(BaseNode):
     """Turns the speech in an audio clip into text with a loaded model.
 
-    Connect `Model` to Load STT Model and `Audio` to a clip, such as Collect Clip's. Any channel
+    Connect `Model` to Load Speech Model and `Audio` to a clip, such as Collect Clip's. Any channel
     count and sample rate will do: the clip is mixed to mono and resampled to the model's rate.
 
     - `Language`: `auto` detects it; a code such as `en` or `de` skips detection and is
@@ -79,7 +79,7 @@ class TranscribeNode(BaseNode):
         self, context: ExecutionContext, audio: AudioBlock | None, model: SttModel | None, language: str
     ) -> None:
         if model is None:
-            raise ValueError("no model — connect Load STT Model")
+            raise ValueError("no model — connect Load Speech Model")
         if audio is None:
             raise ValueError("no audio clip")
         samples = model_input(audio, model.sample_rate)

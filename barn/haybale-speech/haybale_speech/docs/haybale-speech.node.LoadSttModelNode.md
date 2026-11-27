@@ -4,6 +4,8 @@
 
 Loads a speech-to-text model onto the CPU or GPU, for Transcribe
 
+> **Deprecated:** Load STT Model is replaced by Load Speech Model, which loads every kind of speech model
+
 ## Ports
 
 | id | direction | type | description |
@@ -23,18 +25,10 @@ Loads a speech-to-text model onto the CPU or GPU, for Transcribe
 
 ## Notes
 
-Loads a speech-to-text model onto the CPU or GPU, for Transcribe.
+Loads a speech-to-text model onto the CPU or GPU, for Transcribe. Replaced by Load Speech Model.
 
-Pick the model on the card: a catalog entry, such as *Whisper small*. A model that is not on
-this machine is an error until it is fetched in the Models editor. The model runs with
-faster-whisper (CTranslate2), so it must be a CTranslate2 Whisper folder.
+It works as before, and graphs saved with it keep loading. New graphs use Load Speech
+Model, which takes the kind of model the node it feeds needs.
 
-- `Device`: where the model runs. `auto` uses a CUDA GPU when there is one, else the CPU.
-  A device this machine lacks runs on the CPU, with a note.
-- `Compute type`: the number format. `auto` is `int8` on the CPU and `float16` on a GPU.
-  A format the device cannot run falls back to `float32`, with a note.
-- `CPU threads`: `0` lets the engine choose.
-
-All three default to the library's *Speech* settings. Nodes that pick the same model with
-the same settings share one loaded copy. The model is loaded when the graph runs and freed
-when it stops.
+Pick the model on the card: a catalog entry, such as *Whisper small*. The settings
+`Device`, `Compute type` and `CPU threads` are those of Load Speech Model.

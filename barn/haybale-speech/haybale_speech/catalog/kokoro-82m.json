@@ -1,0 +1,33 @@
+{
+    "name": "Kokoro 82M",
+    "author": "hexgrad (ONNX export by thewh1teagle, mirrored by fastrtc)",
+    "license": "Apache-2.0",
+    "commercial": true,
+    "recommended": true,
+    "tags": [
+        "text-to-speech",
+        "kokoro",
+        "multilingual"
+    ],
+    "description": "[Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0 (82 M parameters, 54 voices in 8 languages), exported to ONNX for [kokoro-onnx](https://github.com/thewh1teagle/kokoro-onnx). Speaks at 24 kHz. Voice names start with their language: `a` American and `b` British English, `e` Spanish, `f` French, `h` Hindi, `i` Italian, `j` Japanese, `p` Brazilian Portuguese, `z` Mandarin.",
+    "date": "2025-01-28",
+    "architecture": "kokoro",
+    "purpose": ["tts"],
+    "size": ["82M"],
+    "resources": [
+        {
+            "platform": "onnx",
+            "type": "onnx",
+            "backend": "kokoro-onnx",
+            "precision": "fp32",
+            "size": 353746785,
+            "urls": [
+                "hf://fastrtc/kokoro-onnx@8d07950c9b6c87ce6809e9bba7bd494336217c2a"
+            ],
+            "include": [
+                "kokoro-v1.0.onnx",
+                "voices-v1.0.bin"
+            ]
+        }
+    ]
+}
