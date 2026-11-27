@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import sys
 import threading
+from collections.abc import Iterator
 from types import SimpleNamespace
 
 import numpy as np
@@ -11,7 +13,8 @@ from haybale_audio.value import AudioBlock
 
 from haybale_speech.runtime.audio import model_input
 from haybale_speech.runtime.clip import ClipBuffer
-from haybale_speech.runtime.devices import resolve_compute_type, resolve_device
+from haybale_speech.runtime import devices
+from haybale_speech.runtime.devices import NO_CUDA_DEVICE, cuda_problem, resolve_compute_type, resolve_device
 from haybale_speech.runtime.whisper import Cancelled, collect_segments, transcribe
 from haybale_speech.value import Segment, SttModel, Transcript
 
@@ -70,20 +73,79 @@ def test_clip_buffer_drops_blocks_past_the_limit() -> None:
     assert buffer.dropped == 0
 
 
+BROKEN = "libcublas.so.12 is not found (cuBLAS for CUDA 12)"
+
+
 @pytest.mark.parametrize(
-    ("name", "cuda", "expected"),
+    ("name", "problem", "expected"),
     [
-        ("auto", 0, ("cpu", None)),
-        ("auto", 1, ("cuda", None)),
-        ("", 0, ("cpu", None)),
-        ("cpu", 1, ("cpu", None)),
-        ("cuda", 1, ("cuda", None)),
-        ("cuda", 0, ("cpu", "cuda not available — running on cpu")),
-        ("mps", 0, ("cpu", "mps is not a device — running on cpu")),
+        ("auto", NO_CUDA_DEVICE, ("cpu", None)),
+        ("auto", None, ("cuda", None)),
+        ("auto", BROKEN, ("cpu", f"cuda cannot run: {BROKEN} — running on cpu")),
+        ("", NO_CUDA_DEVICE, ("cpu", None)),
+        ("", BROKEN, ("cpu", f"cuda cannot run: {BROKEN} — running on cpu")),
+        ("cpu", None, ("cpu", None)),
+        ("cuda", None, ("cuda", None)),
+        ("cuda", NO_CUDA_DEVICE, ("cpu", "cuda not available — running on cpu")),
+        ("mps", NO_CUDA_DEVICE, ("cpu", "mps is not a device — running on cpu")),
     ],
 )
-def test_resolve_device(name: str, cuda: int, expected: tuple[str, str | None]) -> None:
-    assert resolve_device(name, cuda) == expected
+def test_resolve_device(name: str, problem: str | None, expected: tuple[str, str | None]) -> None:
+    assert resolve_device(name, lambda: problem) == expected
+
+
+def test_resolve_device_explicit_cuda_that_cannot_run_fails_with_the_reason() -> None:
+    with pytest.raises(RuntimeError, match="libcublas.so.12 is not found"):
+        resolve_device("cuda", lambda: BROKEN)
+
+
+def test_resolve_device_cpu_never_probes() -> None:
+    def probe() -> str | None:
+        raise AssertionError("probed")
+
+    assert resolve_device("cpu", probe) == ("cpu", None)
+
+
+@pytest.fixture
+def fresh_probe(monkeypatch: pytest.MonkeyPatch) -> Iterator[SimpleNamespace]:
+    """cuda_problem with a fake CTranslate2 and cuBLAS loader, its cache cleared around the test."""
+    state = SimpleNamespace(devices=2, loads=True, counts=0)
+
+    def count() -> int:
+        state.counts += 1
+        return state.devices
+
+    def load(library: str) -> object:
+        if not state.loads:
+            raise OSError(f"{library}: cannot open shared object file")
+        return object()
+
+    monkeypatch.setitem(sys.modules, "ctranslate2", SimpleNamespace(get_cuda_device_count=count))
+    monkeypatch.setattr(devices.ctypes, "CDLL", load)
+    monkeypatch.setattr(devices.sys, "platform", "linux")
+    cuda_problem.cache_clear()
+    yield state
+    cuda_problem.cache_clear()
+
+
+def test_cuda_problem_present_and_working(fresh_probe: SimpleNamespace) -> None:
+    assert cuda_problem() is None
+
+
+def test_cuda_problem_present_but_broken(fresh_probe: SimpleNamespace) -> None:
+    fresh_probe.loads = False
+    assert cuda_problem() == "libcublas.so.12 is not found (cuBLAS for CUDA 12)"
+
+
+def test_cuda_problem_absent(fresh_probe: SimpleNamespace) -> None:
+    fresh_probe.devices = 0
+    assert cuda_problem() == NO_CUDA_DEVICE
+
+
+def test_cuda_problem_is_asked_once(fresh_probe: SimpleNamespace) -> None:
+    cuda_problem()
+    cuda_problem()
+    assert fresh_probe.counts == 1
 
 
 CPU = {"int8", "int8_float32", "float32"}
