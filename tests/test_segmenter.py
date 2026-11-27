@@ -154,7 +154,7 @@ def test_node_sends_each_segment_as_a_16k_mono_clip_to_its_subscribers(graph: An
     calls = ctx.emit_callback.call_args_list
     assert len(calls) == 2
     first = calls[0].kwargs
-    assert first["event_name"] == "listener"
+    assert first["event_name"] == ["listener"]
     clip = first["payload"]["audio"]
     assert (clip.channels, clip.sample_rate) == (1, SPEECH_RATE)
     assert abs(clip.frames - SPEECH_RATE // 2) <= 2  # 50 blocks of 10 ms
