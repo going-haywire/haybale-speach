@@ -4,7 +4,7 @@ from typing import Any, ClassVar
 
 from haywire.api import DataWire, StoreStrategy, type as type_decorator
 
-from haybale_speech.types.speech_model import SPEECH_MODEL
+from haybale_speech.types.speech_model import SPEECH_MODEL, SPEECH_MODELField
 from haybale_speech.value.stt_model import SttModel
 
 
@@ -29,3 +29,12 @@ class STT_MODEL(SPEECH_MODEL):
     def fits(cls, model: Any) -> bool:
         """Return whether *model* turns speech into text."""
         return isinstance(model, SttModel)
+
+
+class STT_MODELField(SPEECH_MODELField):
+    """DataField for STT_MODEL: only a model of that kind fits."""
+
+    kind = STT_MODEL
+
+
+STT_MODEL.field_class = STT_MODELField

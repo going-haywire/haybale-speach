@@ -27,7 +27,9 @@ Loads a speech model onto the CPU or GPU, for Transcribe, Speak or Pick Voice.
 Connect the `Model` outlet first, to the node that runs the model: the outlet takes the
 kind of model that node needs (speech-to-text for Transcribe, text-to-speech for Speak and
 Pick Voice), and the `Model` picker appears, offering only models of that kind. The outlet
-keeps its kind until the node is reset.
+keeps its kind until the node is reset. Wired only to nodes outside the family, the
+outlet stays open and the node loads nothing; the first speech node wired to it gives it
+its kind.
 
 Pick the model on the card: a catalog entry, such as *Whisper small* or *Kokoro 82M*. A
 model that is not on this machine is an error until it is fetched in the Models editor.

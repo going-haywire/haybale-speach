@@ -84,6 +84,85 @@ def test_sentences_split_at_ends_and_line_breaks() -> None:
     assert kokoro.sentences("  \n ") == []
 
 
+def test_sentences_drop_pieces_with_no_letter_or_digit() -> None:
+    assert kokoro.sentences("Step 1. Mix it.\n---\nDone!") == ["Step 1.", "Mix it.", "Done!"]
+    assert kokoro.sentences("--- ... !") == []
+
+
+def test_sentences_split_after_full_width_marks_without_a_space() -> None:
+    assert kokoro.sentences("你好。今天很好！再见？好的；是：对") == [
+        "你好。",
+        "今天很好！",
+        "再见？",
+        "好的；",
+        "是：",
+        "对",
+    ]
+
+
+def test_speak_skips_a_piece_with_no_text_and_speaks_the_rest() -> None:
+    engine = _Engine()
+    samples = kokoro.speak(_model(engine), "Step 1. Mix it.\n---\nDone!", _voice())
+    assert engine.texts == ["Step 1.", "Mix it.", "Done!"]
+    assert len(samples) == 3 * 240 + 2 * int(kokoro.SENTENCE_PAUSE * 24000)
+
+
+class _NoPhonemes(_Engine):
+    """An engine for which some pieces have no phonemes, as kokoro-onnx says for them."""
+
+    def __init__(self, silent: set[str]) -> None:
+        super().__init__()
+        self.silent = silent
+
+    def create(self, text: str, voice: Any, speed: float, lang: str) -> tuple[np.ndarray, int]:
+        if text in self.silent:
+            self.texts.append(text)
+            raise ValueError(f"Nothing to synthesize, {text!r} produced no phonemes")
+        return super().create(text, voice, speed, lang)
+
+
+def test_speak_skips_a_piece_the_engine_finds_no_phonemes_in() -> None:
+    steps: list[int] = []
+    engine = _NoPhonemes({"Hm2."})
+    samples = kokoro.speak(
+        _model(engine), "One. Hm2. Two.", _voice(), on_progress=lambda s, n: steps.append(n)
+    )
+    assert engine.texts == ["One.", "Hm2.", "Two."]
+    assert len(samples) == 2 * 240 + int(kokoro.SENTENCE_PAUSE * 24000)
+    assert steps == [1, 2, 3]
+
+
+def test_speak_with_no_phonemes_anywhere_is_no_text_to_speak() -> None:
+    with pytest.raises(ValueError, match="no text to speak"):
+        kokoro.speak(_model(_NoPhonemes({"Hm2.", "Hm3."})), "Hm2. Hm3.", _voice())
+
+
+class _Session:
+    def __init__(self, *providers: str) -> None:
+        self.providers = list(providers)
+
+    def get_providers(self) -> list[str]:
+        return self.providers
+
+
+@pytest.mark.parametrize(
+    ("device", "providers", "expected"),
+    [
+        ("cpu", ("CPUExecutionProvider",), ("cpu", ("n",))),
+        ("cuda", ("CUDAExecutionProvider", "CPUExecutionProvider"), ("cuda", ("n",))),
+        (
+            "cuda",
+            ("CPUExecutionProvider",),
+            ("cpu", ("n", "cuda cannot run in ONNX Runtime (CPUExecutionProvider only) — running on cpu")),
+        ),
+    ],
+)
+def test_ran_on_reads_the_device_from_the_session(
+    device: str, providers: tuple[str, ...], expected: tuple[str, tuple[str, ...]]
+) -> None:
+    assert kokoro.ran_on(_Session(*providers), device, ("n",)) == expected
+
+
 @pytest.mark.parametrize(
     ("name", "language"),
     [

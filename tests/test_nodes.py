@@ -176,8 +176,77 @@ def test_the_outlet_takes_the_kind_of_the_node_it_feeds(graph: Any) -> None:
 
 def test_an_open_outlet_is_an_error(graph: Any) -> None:
     load = add_node(graph, *LOAD)
-    with pytest.raises(ValueError, match="connect the Model outlet first"):
-        load.worker(MagicMock(), model=None)
+    with pytest.raises(
+        ValueError, match="connect the Model outlet to Transcribe, Speak or Pick Voice first"
+    ):
+        load._execute(MagicMock())
+
+
+def test_an_outlet_first_wired_outside_the_family_takes_a_later_speech_kind(graph: Any) -> None:
+    from haywire.api import ADD
+
+    from haybale_speech.types.stt_model import STT_MODEL
+    from haybale_speech.types.tts_model import TTS_MODEL
+
+    load, _ = _loader_for(graph, ("haybale_core.nodes.print", "PrintNode"), port="message")
+    assert load.ports["loaded"].type_cls is ADD  # left open: Print takes no speech model
+    assert "model" not in load.ports
+    with pytest.raises(ValueError, match="connect the Model outlet to Transcribe, Speak or Pick Voice"):
+        load._execute(MagicMock())
+    transcribe = add_node(graph, *TRANSCRIBE)
+    graph.create_edge_wrapper(load.node_id, "loaded", transcribe.node_id, "model")
+    assert load.ports["loaded"].type_cls is STT_MODEL
+    assert load.ports["model"].widget_config["properties"]["filter"] == {"purpose": ["stt"]}
+    speak = add_node(graph, *SPEAK)  # a kind, once given, stays
+    graph.create_edge_wrapper(load.node_id, "loaded", speak.node_id, "model")
+    assert load.ports["loaded"].type_cls is STT_MODEL
+    assert load.ports["loaded"].type_cls is not TTS_MODEL
+
+
+def test_a_failed_switch_lets_go_of_the_model_loaded_before(
+    graph: Any,
+    models_env: VolumeStore,
+    model_file: Path,
+    fake_load: list[tuple[Any, ...]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from haybale_speech.nodes.load_stt_model import NOT_LOADED
+
+    whisper = importlib.import_module("haybale_speech.runtime.whisper")
+
+    def resolve(device: str, compute: str) -> tuple[str, str, tuple[str, ...]]:
+        if device == "cuda":
+            raise RuntimeError("cuda cannot run: libcublas.so.12 is not found")
+        return "cpu", "int8", ()
+
+    monkeypatch.setattr(whisper, "resolve", resolve)
+    load, _ = _loader_for(graph, TRANSCRIBE)
+    load.ports["model"].set_value(place_model(model_file))
+    load._execute(MagicMock())
+    assert len(_pool().entries()) == 1 and load.status.loaded != NOT_LOADED
+
+    load.settings.device = "cuda"  # a switch to a device that cannot run
+    with pytest.raises(RuntimeError, match="cuda cannot run"):
+        load._execute(MagicMock())
+    assert _pool().entries() == []
+    assert load.status.loaded == NOT_LOADED
+
+
+def test_a_kind_port_holds_only_a_model_of_its_kind(graph: Any, model_file: Path) -> None:
+    transcribe = add_node(graph, *TRANSCRIBE)
+    speak = add_node(graph, *SPEAK)
+    stt = SttModel(
+        engine=_FakeEngine(), backend="faster-whisper", device="cpu", compute_type="int8", name="W"
+    )
+    tts = TtsModel(engine=_FakeKokoro(), backend="kokoro-onnx", device="cpu", compute_type="", name="K")
+    transcribe.ports["model"].set_value(tts)
+    speak.ports["model"].set_value(stt)
+    assert transcribe.ports["model"].get_value() is None
+    assert speak.ports["model"].get_value() is None
+    transcribe.ports["model"].set_value(stt)
+    speak.ports["model"].set_value(tts)
+    assert transcribe.ports["model"].get_value() is stt
+    assert speak.ports["model"].get_value() is tts
 
 
 def test_a_missing_backend_is_an_error_on_the_card(

@@ -23,7 +23,7 @@ from haywire.api import (
     shadow,
 )
 
-from haybale_speech.runtime.backends import Backend, BackendMissing, by_name, default_for, preference
+from haybale_speech.runtime.backends import Backend, by_name, default_for, preference
 from haybale_speech.settings.speech_settings import SpeechSettings
 
 #: Warning kind of the device and compute type notes on the card.
@@ -88,25 +88,30 @@ class BaseSpeechLoaderNode(BaseNode):
         """Another device, compute type or thread count needs another load: run at the next execution."""
         self.run_again()
 
-    def worker(self, context: ExecutionContext, model: ModelRef) -> None:
+    def worker(self, context: ExecutionContext, model: ModelRef | None = None) -> None:
         kind = self._outlet_kind()
         if kind is None:
-            raise ValueError("connect the Model outlet first: it decides which kind of model to load")
+            raise ValueError(
+                "connect the Model outlet to Transcribe, Speak or Pick Voice first: "
+                "it decides which kind of model to load"
+            )
         try:
             resolved = resolve_port(self, "model")
         except Exception:
             self._let_go()
             raise
         name = resolved.entry.name if resolved.entry is not None else resolved.path.name
-        backend = _backend_for(resolved, kind, name)
         try:
+            backend = _backend_for(resolved, kind, name)
             runtime = backend.runtime()
-        except BackendMissing:
+            device, compute_type, notes = runtime.resolve(
+                str(self.settings.device), str(self.settings.compute_type)
+            )
+        except Exception:
+            # A model that can no longer load lets go of the one loaded before, so the
+            # card and the pool never show a model this node does not give.
             self._let_go()
             raise
-        device, compute_type, notes = runtime.resolve(
-            str(self.settings.device), str(self.settings.compute_type)
-        )
         if not compute_type and resolved.resource is not None:
             compute_type = resolved.resource.precision or ""
         threads = int(self.settings.threads)
@@ -208,7 +213,9 @@ class LoadSpeechModelNode(BaseSpeechLoaderNode):
     Connect the `Model` outlet first, to the node that runs the model: the outlet takes the
     kind of model that node needs (speech-to-text for Transcribe, text-to-speech for Speak and
     Pick Voice), and the `Model` picker appears, offering only models of that kind. The outlet
-    keeps its kind until the node is reset.
+    keeps its kind until the node is reset. Wired only to nodes outside the family, the
+    outlet stays open and the node loads nothing; the first speech node wired to it gives it
+    its kind.
 
     Pick the model on the card: a catalog entry, such as *Whisper small* or *Kokoro 82M*. A
     model that is not on this machine is an error until it is fetched in the Models editor.
@@ -242,15 +249,16 @@ class LoadSpeechModelNode(BaseSpeechLoaderNode):
     def _on_outlet_connected(self, port: Any, edge_wrapper: Any) -> None:
         """Give the open outlet the kind of model the connected inlet takes, once.
 
-        An inlet outside the speech model family makes it ``SPEECH_MODEL``, so that edge shows
-        as invalid instead of carrying a model where none fits.
+        An inlet outside the speech model family leaves the outlet open: the node loads
+        nothing (its card asks for a speech node), and the first speech node wired to it
+        later gives it its kind. An outlet that has a kind keeps it.
         """
         from haybale_speech.types.speech_model import SPEECH_MODEL
 
-        if port.type_cls is not ADD:
-            return
         sink = edge_wrapper._inlet_port.stored_type
-        kind = sink if isinstance(sink, type) and issubclass(sink, SPEECH_MODEL) else SPEECH_MODEL
+        if port.type_cls is not ADD or not (isinstance(sink, type) and issubclass(sink, SPEECH_MODEL)):
+            return
+        kind = sink
         with self.rejig(include=[port.id, "model"]):
             self._add_model_inlet(kind)
             self.add(

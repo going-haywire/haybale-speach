@@ -30,7 +30,7 @@ class SPEECH_MODEL(PrimitiveType[SttModel | TtsModel | None]):
 
     def __init__(self, value: Any = None, **kwargs: Any) -> None:
         super().__init__(value, **kwargs)
-        self._value = _as_model(self._value)  # the type's default arrives as JSON
+        self._value = self._value if type(self).fits(self._value) else None  # default arrives as JSON
 
     @classmethod
     def fits(cls, model: Any) -> bool:
@@ -48,19 +48,26 @@ class SPEECH_MODEL(PrimitiveType[SttModel | TtsModel | None]):
 
 
 class SPEECH_MODELField(PrimitiveField):
-    """DataField for the speech model types: a loaded model, or ``None`` until Load Speech Model ran."""
+    """DataField for a speech model type: a loaded model of its kind, or ``None``.
+
+    Each kind has its own field class, whose ``kind`` decides what fits, so a port holds only
+    a model of its kind.
+    """
+
+    #: The type whose ``fits`` a value must pass; each kind's field class sets its own.
+    kind: ClassVar[type[SPEECH_MODEL]]
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self._default = _as_model(self._default)
+        self._default = self._coerce(self._default)
         self._value = self._default
 
     def _set_own(self, value: Any) -> None:
-        self._value = _as_model(value)
+        self._value = self._coerce(value)
+
+    def _coerce(self, value: Any) -> SttModel | TtsModel | None:
+        return value if self.kind.fits(value) else None
 
 
-def _as_model(value: Any) -> SttModel | TtsModel | None:
-    return value if isinstance(value, (SttModel, TtsModel)) else None
-
-
+SPEECH_MODELField.kind = SPEECH_MODEL
 SPEECH_MODEL.field_class = SPEECH_MODELField

@@ -55,7 +55,7 @@ class SpeakNode(BaseNode):
     Connect `Model` to Load Speech Model and `Text` to the text to speak, such as Transcribe's
     `Text`. The clip is mono, at the model's sample rate (24 kHz for Kokoro).
 
-    - `Voice`: the voice by name, such as `af_heart` (American English) or `bf_emma` (British
+    - `Voice Name`: the voice by name, such as `af_heart` (American English) or `bf_emma` (British
       English); the first letter of a Kokoro voice is its language. A `Voice` wire, from Pick
       Voice, takes its place.
     - `Speed`: 0.5 to 2.0; 1.0 is the voice's own pace.

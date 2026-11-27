@@ -6,6 +6,7 @@ import re
 import threading
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -44,8 +45,9 @@ LANGUAGES = {
     "z": "cmn",
 }
 
-#: Splits text after the end of a sentence, or at a line break.
-_SENTENCE_END = re.compile(r"(?<=[.!?…;:])\s+|\n+")
+#: Splits text after the end of a sentence, or at a line break. Full-width marks (CJK text)
+#: end a sentence with or without a space after them.
+_SENTENCE_END = re.compile(r"(?<=[.!?…;:])\s+|(?<=[。！？；：])\s*|\n+")
 
 
 def resolve(device: str, compute_type: str, cuda: bool | None = None) -> tuple[str, str, tuple[str, ...]]:
@@ -121,6 +123,7 @@ def load(
         ["CUDAExecutionProvider", "CPUExecutionProvider"] if device == "cuda" else ["CPUExecutionProvider"]
     )
     session = onnxruntime.InferenceSession(str(model_path), sess_options=options, providers=providers)
+    device, notes = ran_on(session, device, notes)
     engine = Kokoro.from_session(session, str(voices_path))
     return TtsModel(
         engine=engine,
@@ -132,6 +135,20 @@ def load(
         sample_rate=SAMPLE_RATE,
         notes=notes,
     )
+
+
+def ran_on(session: Any, device: str, notes: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
+    """Return the device *session* really runs on, with a note when CUDA fell back to the CPU.
+
+    ONNX Runtime lists the CUDA provider whenever its library is installed, but drops it
+    without an error when CUDA cannot start; the session's first provider is the one it uses.
+    """
+    if device != "cuda":
+        return device, notes
+    first = session.get_providers()[0]
+    if first == "CUDAExecutionProvider":
+        return device, notes
+    return "cpu", (*notes, f"cuda cannot run in ONNX Runtime ({first} only) — running on cpu")
 
 
 def release(model: TtsModel) -> None:
@@ -158,8 +175,9 @@ def voice(model: TtsModel, name: str) -> Voice:
 
 
 def sentences(text: str) -> list[str]:
-    """Split *text* into sentences, dropping empty ones."""
-    return [part.strip() for part in _SENTENCE_END.split(text) if part and part.strip()]
+    """Split *text* into sentences, dropping those with no letter or digit (``---``, ``…``)."""
+    parts = (part.strip() for part in _SENTENCE_END.split(text) if part)
+    return [part for part in parts if any(char.isalnum() for char in part)]
 
 
 def speak(
@@ -200,10 +218,20 @@ def speak(
         for index, sentence in enumerate(parts):
             if cancel is not None and cancel.is_set():
                 raise Cancelled
-            audio, _rate = model.engine.create(sentence, voice=voice.style, speed=speed, lang=voice.language)
-            if pieces:
-                pieces.append(pause)
-            pieces.append(np.asarray(audio, np.float32).ravel())
+            try:
+                audio, _rate = model.engine.create(
+                    sentence, voice=voice.style, speed=speed, lang=voice.language
+                )
+            except ValueError as error:
+                if "Nothing to synthesize" not in str(error):
+                    raise
+                audio = None  # a piece with no phonemes is skipped, not the whole text
+            if audio is not None:
+                if pieces:
+                    pieces.append(pause)
+                pieces.append(np.asarray(audio, np.float32).ravel())
             if on_progress is not None:
                 on_progress((index + 1) / len(parts), index + 1)
+    if not pieces:
+        raise ValueError("no text to speak")
     return np.ascontiguousarray(np.concatenate(pieces), dtype=np.float32)
