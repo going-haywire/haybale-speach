@@ -448,3 +448,18 @@ def test_the_deprecated_collect_clip_still_feeds_transcribe(graph: Any) -> None:
     edge = graph.create_edge_wrapper(clip.node_id, "clip", transcribe.node_id, "audio")
     graph.force_validation()
     assert edge.state.is_valid()
+
+
+def test_pick_voice_picks_another_voice_while_the_graph_runs(
+    graph: Any, models_env: VolumeStore, model_file: Path, fake_kokoro: list[tuple[Any, ...]]
+) -> None:
+    """A changed Voice Name is picked at the next execution, though no inlet changed."""
+    load, pick, model = _loaded_tts(graph, model_file, PICK)
+    pick.ports["model"].set_value(model)
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "af_heart"
+    pick._execute(MagicMock())  # nothing changed: the node does not run
+    pick.ports["voice_name"].set_value("bf_emma")
+    pick._execute(MagicMock())
+    assert pick.ports["voice"].get_value().name == "bf_emma"
+    load.on_shutdown(MagicMock())

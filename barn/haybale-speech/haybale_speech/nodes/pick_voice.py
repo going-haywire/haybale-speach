@@ -38,10 +38,19 @@ class PickVoiceNode(BaseNode):
                     properties={"options": list(VOICES), "new_value_mode": "add-unique"}
                 ),
                 description="The model's voice",
+                on_change="_on_voice_name_changed",
             )
         )
         self.add(VOICE.as_outlet("voice", label="Voice", description="The voice, for Speak"))
         self.add(STRING.as_outlet("language", label="Language", description="The language the voice speaks"))
+
+    def _on_voice_name_changed(self, port: object, value: object) -> None:
+        """Another voice: pick it at the next execution, while the graph runs too.
+
+        A config write marks no port dirty, and the model inlet rarely changes, so without this
+        the node would keep handing out the voice it picked first.
+        """
+        self.run_again()
 
     def worker(self, context: ExecutionContext, model: TtsModel | None, voice_name: str) -> None:
         if model is None:
