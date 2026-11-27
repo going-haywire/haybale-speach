@@ -12,7 +12,7 @@ class SpeechSettings(LibrarySettings):
     device = setting[CHOICES](
         "auto",
         label="Device",
-        description="Where models run: auto (a CUDA GPU when there is one, else the CPU), cpu or cuda",
+        description="Where models run: auto (a CUDA GPU when one can run, else the CPU), cpu or cuda",
         widget_config={"options": list(DEVICES)},
     )
     compute_type = setting[CHOICES](

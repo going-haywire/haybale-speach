@@ -71,8 +71,10 @@ class LoadSttModelNode(BaseNode):
     this machine is an error until it is fetched in the Models editor. The model runs with
     faster-whisper (CTranslate2), so it must be a CTranslate2 Whisper folder.
 
-    - `Device`: where the model runs. `auto` uses a CUDA GPU when there is one, else the CPU.
-      A device this machine lacks runs on the CPU, with a note.
+    - `Device`: where the model runs. `auto` uses a CUDA GPU when one can run, else the CPU;
+      a GPU that cannot run (no cuBLAS for CUDA 12, say) gives a note. A device this machine
+      lacks runs on the CPU, with a note; `cuda` on a GPU that cannot run is an error that
+      says why.
     - `Compute type`: the number format. `auto` is `int8` on the CPU and `float16` on a GPU.
       A format the device cannot run falls back to `float32`, with a note.
     - `CPU threads`: `0` lets the engine choose.
