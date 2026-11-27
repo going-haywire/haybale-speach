@@ -25,5 +25,7 @@ Gathers the audio blocks of a flow into one clip, sent on Stop
 haybale-audio's Collect Clip under its 0.0.2 name in haybale-speech. Replaced by that node.
 
 It works as haybale-audio's does, and graphs saved with it keep loading: its `Clip` is an
-Audio Clip, so it still connects to Transcribe. New graphs use Collect Clip from the
-*audio/clip* menu.
+Audio Clip, so it still connects to Transcribe. In 0.0.2 `Clip` was Audio, a block: an
+edge saved from it to an Audio inlet, such as a Recorder's or Reblock's, now loads broken
+(no adapter from Audio Clip to Audio). Play the clip through Clip Player into an Audio
+Event instead. New graphs use Collect Clip from the *audio/clip* menu.

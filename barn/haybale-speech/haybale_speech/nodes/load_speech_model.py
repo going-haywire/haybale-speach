@@ -237,7 +237,9 @@ class LoadSpeechModelNode(BaseSpeechLoaderNode):
     - `Workers`: how many clips the model works on at once, for flows that share it, such as
       Clip Events set to Pooled behind one Clip Segmenter. `1` runs one at a time. More only
       helps while cores are idle: each run shares the CPU threads. faster-whisper gets it as
-      `num_workers`, at one model's memory.
+      `num_workers` (CTranslate2's `inter_threads`), which lets concurrent calls run in parallel
+      on one loaded model at the cost of more memory per worker; kokoro-onnx needs no setting
+      of its own.
 
     All four default to the library's *Speech* settings. Nodes that pick the same model with
     the same settings share one loaded copy. The model is loaded when the graph runs and freed

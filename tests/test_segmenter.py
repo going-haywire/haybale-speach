@@ -127,3 +127,30 @@ def test_node_without_audio_is_an_error(graph: Any) -> None:
     node = _segmenter_node(graph)
     with pytest.raises(ValueError, match="audio block"):
         node.worker(_context(), audio=None)
+
+
+@pytest.mark.integration
+def test_node_takes_another_channel_count_between_clips_as_0_0_2_did(graph: Any) -> None:
+    node = _segmenter_node(graph)
+    ctx = _context()
+    _run(node, ctx, _tone(30, channels=2) + _silence(10, channels=2))  # 0.4 s
+    _run(node, ctx, _silence(10, channels=1) + _tone(30, channels=1) + _silence(10, channels=1))
+    calls = ctx.emit_callback.call_args_list
+    assert len(calls) == 2
+    second = calls[1].kwargs["payload"]
+    assert second["block_number"] == 2  # the count goes on
+    assert second["timestamp"] == pytest.approx(0.5)  # and the stream time: 0.4 s + 10 silent blocks
+    assert second["audio"].channels == 1
+
+
+@pytest.mark.integration
+def test_node_refuses_another_channel_count_inside_a_clip_and_another_rate(graph: Any) -> None:
+    node = _segmenter_node(graph)
+    ctx = _context()
+    _run(node, ctx, _tone(10, channels=2))  # a clip is open
+    with pytest.raises(ValueError, match="1 ch"):
+        _run(node, ctx, _tone(1, channels=1))
+    _run(node, ctx, _silence(10, channels=2))  # the clip ends
+    other_rate = AudioBlock(np.zeros((1, 160), np.float32), 16000)
+    with pytest.raises(ValueError, match="16000 Hz"):
+        _run(node, ctx, [other_rate])
