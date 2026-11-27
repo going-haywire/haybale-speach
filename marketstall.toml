@@ -4,12 +4,12 @@
 [[haybales]]
 name = "haybale-speech"
 label = "Speech"
-version = "0.0.2"
+version = "0.0.3"
 require = "haywire-core>=0.6.1"
-description = "Speech-to-text for audio clips, with faster-whisper"
+description = "Speech-to-text and text-to-speech, with faster-whisper and Kokoro"
 source = "pypi"
-install_spec = "haybale-speech==0.0.2"
-tags = [ "audio", "speech", "stt", "models",]
+install_spec = "haybale-speech==0.0.3"
+tags = [ "audio", "speech", "stt", "tts", "models",]
 on_reload = "none"
 linked_libraries = [ "haybale_audio", "haybale_core", "haybale_models",]
 origin = "https://github.com/going-haywire/haybale-speech"
