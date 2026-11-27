@@ -16,7 +16,10 @@ def test_speech_library_loads(library_system: Any) -> None:
 @pytest.mark.parametrize(
     ("module", "name"),
     [
+        ("haybale_speech.nodes.load_speech_model", "LoadSpeechModelNode"),
         ("haybale_speech.nodes.load_stt_model", "LoadSttModelNode"),
+        ("haybale_speech.nodes.speak", "SpeakNode"),
+        ("haybale_speech.nodes.pick_voice", "PickVoiceNode"),
         ("haybale_speech.nodes.transcribe", "TranscribeNode"),
         ("haybale_speech.nodes.collect_clip", "CollectClipNode"),
     ],
@@ -41,6 +44,29 @@ def test_the_catalog_offers_whisper_small_pinned_and_commercial(library_system: 
     repo, _, commit = url.partition("@")
     assert repo == "hf://Systran/faster-whisper-small"
     assert len(commit) == 40  # a whole-repo address is pinned by its commit
+
+
+def test_the_catalog_offers_kokoro_pinned_and_commercial(library_system: Any) -> None:
+    from haybale_models.consumer import models_state
+
+    entry: Any = models_state().catalog.get("haybale-speech:catalog:kokoro-82m")
+    assert entry is not None
+    assert entry.purpose == ["tts"]
+    assert entry.license == "Apache-2.0"
+    assert entry.commercial is True
+    (resource,) = entry.resources
+    assert resource.backend == "kokoro-onnx"
+    assert resource.include == ("kokoro-v1.0.onnx", "voices-v1.0.bin")
+    (url,) = resource.urls
+    repo, _, commit = url.partition("@")
+    assert repo == "hf://fastrtc/kokoro-onnx"
+    assert len(commit) == 40
+
+
+def test_load_stt_model_is_deprecated_for_load_speech_model(library_system: Any) -> None:
+    from haybale_speech.nodes.load_stt_model import LoadSttModelNode
+
+    assert "Load Speech Model" in LoadSttModelNode.class_identity.deprecation_warning
 
 
 def test_the_speech_settings_have_a_panel(library_system: Any) -> None:

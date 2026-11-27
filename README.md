@@ -18,6 +18,15 @@ https://github.com/going-haywire/haybale-speech/blob/v0.0.2/marketstall.toml
 ```
 <!-- marketstall:share-url:end -->
 
+## Licences
+
+The library is MIT. Its text-to-speech backend, kokoro-onnx (MIT), turns text into
+phonemes with [phonemizer](https://github.com/bootphon/phonemizer) and the espeak-ng library
+that `espeakng-loader` ships; both are **GPL-3.0**. They are runtime dependencies, installed
+from PyPI, not part of this repository. The models have their own licences, stated in each
+catalog entry (`barn/haybale-speech/haybale_speech/catalog/`): Whisper small is MIT,
+Kokoro 82M is Apache-2.0.
+
 ## Getting started
 
 ```sh

@@ -11,8 +11,8 @@ version = "0.0.2"  # PEP 440, no "v" — canon here; pyproject.toml carries the 
 
 # ── display ───────────────────────────────────────────────────────────────
 label = "Speech"  # human display name
-description = "Speech-to-text for audio clips, with faster-whisper"  # one line
-tags = ["audio", "speech", "stt", "models"]  # filter tags in the library browser
+description = "Speech-to-text and text-to-speech, with faster-whisper and Kokoro"  # one line
+tags = ["audio", "speech", "stt", "tts", "models"]  # filter tags in the library browser
 
 # ── behaviour ─────────────────────────────────────────────────────────────
 # os = ["macos", "linux"]  # macos/linux/windows; empty/absent = every platform

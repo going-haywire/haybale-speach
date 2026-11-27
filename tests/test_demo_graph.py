@@ -22,7 +22,7 @@ NODES = {
     "mic_event": ("haybale_audio.nodes.audio_event", "AudioEventNode", (0, 260)),
     "segmenter": ("haybale_speech.nodes.speech_segmenter", "SpeechSegmenterNode", (300, 260)),
     "clip_event": ("haybale_audio.nodes.audio_event", "AudioEventNode", (0, 640)),
-    "load": ("haybale_speech.nodes.load_stt_model", "LoadSttModelNode", (0, 900)),
+    "load": ("haybale_speech.nodes.load_speech_model", "LoadSpeechModelNode", (0, 900)),
     "transcribe": ("haybale_speech.nodes.transcribe", "TranscribeNode", (300, 820)),
     "print": ("haybale_core.nodes.print", "PrintNode", (600, 640)),
 }
@@ -40,7 +40,7 @@ EDGES = [
     ("transcribe", "text", "print", "message"),
 ]
 
-#: The catalog entry Load STT Model picks, so the demo starts without a hand-picked model.
+#: The catalog entry Load Speech Model picks, so the demo starts without a hand-picked model.
 MODEL = "haybale-speech:catalog:whisper-small"
 
 
@@ -83,10 +83,14 @@ def test_the_demo_graph_is_what_build_demo_graph_makes(graph: Any) -> None:
 
 
 def test_the_demo_graph_picks_whisper_small(graph: Any) -> None:
-    """Load STT Model has its catalog entry chosen: no ``ModelMissing`` on start."""
+    """Load Speech Model keeps its kind and its catalog entry: no ``ModelMissing`` on start."""
+    from haybale_speech.types.stt_model import STT_MODEL
+
     assert graph.load_from_file(str(DEMO))
-    (load,) = [w.node for w in graph.list_node_wrappers() if type(w.node).__name__ == "LoadSttModelNode"]
+    (load,) = [w.node for w in graph.list_node_wrappers() if type(w.node).__name__ == "LoadSpeechModelNode"]
+    assert load.ports["loaded"].type_cls is STT_MODEL
     assert load.ports["model"].get_value().catalog == MODEL
+    assert load.ports["model"].widget_config["properties"]["filter"] == {"purpose": ["stt"]}
 
 
 if __name__ == "__main__":  # rebuild examples/live_speech_to_text.haywire

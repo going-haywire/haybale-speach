@@ -9,10 +9,17 @@ from typing import Any
 
 import numpy as np
 
+from haybale_speech.runtime.devices import resolve_compute_type, resolve_device
 from haybale_speech.value import Segment, SttModel, Transcript
 
 #: The backend name in catalog variants and on the card.
 BACKEND = "faster-whisper"
+
+#: The model kind this backend loads.
+KIND = "stt"
+
+#: The module that must be importable for this backend to load.
+REQUIRES = "faster_whisper"
 
 
 class Cancelled(Exception):
@@ -48,6 +55,18 @@ def load_whisper(
 
 def release_whisper(model: SttModel) -> None:
     """Nothing to free by hand: the model's memory goes with its last reference."""
+
+
+def resolve(device: str, compute_type: str) -> tuple[str, str, tuple[str, ...]]:
+    """Return the CTranslate2 device and compute type for the settings, with the notes of any fallback."""
+    resolved, device_note = resolve_device(device)
+    compute, compute_note = resolve_compute_type(compute_type, resolved)
+    return resolved, compute, tuple(n for n in (device_note, compute_note) if n)
+
+
+#: The backend interface's names for the loader (see ``runtime.backends``).
+load = load_whisper
+release = release_whisper
 
 
 def transcribe(

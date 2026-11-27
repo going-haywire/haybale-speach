@@ -14,4 +14,4 @@ A speech-to-text model loaded on a device, ready to run. Never saved with the gr
 
 A speech-to-text model loaded on a device, ready to transcribe.
 
-Load STT Model gives it; Transcribe takes it.
+Load Speech Model gives it when wired to Transcribe; Transcribe takes it.
