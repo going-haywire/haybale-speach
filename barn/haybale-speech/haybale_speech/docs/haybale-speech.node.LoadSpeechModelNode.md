@@ -15,7 +15,7 @@ Loads a speech model onto the CPU or GPU, for Transcribe, Speak or Pick Voice
 
 | name | bag | default | description |
 |---|---|---|---|
-| `device` | settings | `None` | Where models run: auto (a CUDA GPU when there is one, else the CPU), cpu or cuda |
+| `device` | settings | `None` | Where models run: auto (a CUDA GPU when one can run, else the CPU), cpu or cuda |
 | `compute_type` | settings | `None` | Number format the model computes in: auto is int8 on the CPU and float16 on a GPU; a format the device cannot run falls back to float32 |
 | `threads` | settings | `None` | Threads a model uses on the CPU; 0 lets the engine choose |
 | `loaded` | status | `'< shows after the first run >'` | Name, backend, device and compute type of the loaded model |
@@ -34,8 +34,10 @@ model that is not on this machine is an error until it is fetched in the Models 
 The catalog entry names the backend that runs it (faster-whisper, kokoro-onnx); a backend
 that is not installed is an error on the card.
 
-- `Device`: where the model runs. `auto` uses a CUDA GPU when there is one, else the CPU.
-  A device this machine lacks runs on the CPU, with a note.
+- `Device`: where the model runs. `auto` uses a CUDA GPU when one can run, else the CPU;
+  a GPU that cannot run (no cuBLAS for CUDA 12, say) gives a note. A device this machine
+  lacks runs on the CPU, with a note; `cuda` on a GPU that cannot run is an error that
+  says why.
 - `Compute type`: the number format, for faster-whisper models. `auto` is `int8` on the CPU
   and `float16` on a GPU. A format the device cannot run falls back to `float32`, with a
   note. kokoro-onnx runs the precision of the model file, and notes any other choice.

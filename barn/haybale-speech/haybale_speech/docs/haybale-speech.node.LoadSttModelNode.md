@@ -18,7 +18,7 @@ Loads a speech-to-text model onto the CPU or GPU, for Transcribe
 
 | name | bag | default | description |
 |---|---|---|---|
-| `device` | settings | `None` | Where models run: auto (a CUDA GPU when there is one, else the CPU), cpu or cuda |
+| `device` | settings | `None` | Where models run: auto (a CUDA GPU when one can run, else the CPU), cpu or cuda |
 | `compute_type` | settings | `None` | Number format the model computes in: auto is int8 on the CPU and float16 on a GPU; a format the device cannot run falls back to float32 |
 | `threads` | settings | `None` | Threads a model uses on the CPU; 0 lets the engine choose |
 | `loaded` | status | `'< shows after the first run >'` | Name, backend, device and compute type of the loaded model |

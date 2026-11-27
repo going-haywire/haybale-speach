@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from haybale_speech.runtime.devices import resolve_device
+from haybale_speech.runtime.devices import NO_CUDA_DEVICE, resolve_device
 from haybale_speech.runtime.whisper import Cancelled
 from haybale_speech.value import TtsModel, Voice
 
@@ -63,7 +63,7 @@ def resolve(device: str, compute_type: str, cuda: bool | None = None) -> tuple[s
         import onnxruntime
 
         cuda = "CUDAExecutionProvider" in onnxruntime.get_available_providers()
-    resolved, device_note = resolve_device(device, cuda_devices=1 if cuda else 0)
+    resolved, device_note = resolve_device(device, lambda: None if cuda else NO_CUDA_DEVICE)
     notes = [device_note] if device_note else []
     wanted = (compute_type or "auto").strip().lower()
     if wanted != "auto":

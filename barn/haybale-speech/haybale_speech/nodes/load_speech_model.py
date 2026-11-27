@@ -215,8 +215,10 @@ class LoadSpeechModelNode(BaseSpeechLoaderNode):
     The catalog entry names the backend that runs it (faster-whisper, kokoro-onnx); a backend
     that is not installed is an error on the card.
 
-    - `Device`: where the model runs. `auto` uses a CUDA GPU when there is one, else the CPU.
-      A device this machine lacks runs on the CPU, with a note.
+    - `Device`: where the model runs. `auto` uses a CUDA GPU when one can run, else the CPU;
+      a GPU that cannot run (no cuBLAS for CUDA 12, say) gives a note. A device this machine
+      lacks runs on the CPU, with a note; `cuda` on a GPU that cannot run is an error that
+      says why.
     - `Compute type`: the number format, for faster-whisper models. `auto` is `int8` on the CPU
       and `float16` on a GPU. A format the device cannot run falls back to `float32`, with a
       note. kokoro-onnx runs the precision of the model file, and notes any other choice.

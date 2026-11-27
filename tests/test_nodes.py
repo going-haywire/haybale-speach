@@ -13,6 +13,7 @@ import pytest
 from haybale_audio.value import AudioBlock
 from haywire.core.volumes import VolumeStore
 
+from haybale_speech.runtime.whisper import resolve as WHISPER_RESOLVE
 from haybale_speech.value import SttModel, TtsModel
 from tests.conftest import add_node, place_model, run_from
 
@@ -190,6 +191,41 @@ def test_a_missing_backend_is_an_error_on_the_card(
     with pytest.raises(BackendMissing, match="kokoro-onnx is not installed"):
         load._execute(MagicMock())
     assert _pool().entries() == []
+
+
+@pytest.mark.parametrize(
+    ("device", "expected"),
+    [
+        ("auto", "cuda cannot run: libcublas.so.12 is not found (cuBLAS for CUDA 12) — running on cpu"),
+        ("cuda", None),
+    ],
+)
+def test_a_gpu_that_cannot_run_falls_back_on_auto_and_fails_on_cuda(
+    graph: Any,
+    models_env: VolumeStore,
+    model_file: Path,
+    fake_load: list[tuple[Any, ...]],
+    monkeypatch: pytest.MonkeyPatch,
+    device: str,
+    expected: str | None,
+) -> None:
+    whisper = importlib.import_module("haybale_speech.runtime.whisper")
+    devices = importlib.import_module("haybale_speech.runtime.devices")
+    broken = "libcublas.so.12 is not found (cuBLAS for CUDA 12)"
+    monkeypatch.setattr(whisper, "resolve", WHISPER_RESOLVE)  # the real one, under the fake load
+    monkeypatch.setattr(whisper, "resolve_device", lambda name: devices.resolve_device(name, lambda: broken))
+    monkeypatch.setattr(whisper, "resolve_compute_type", lambda name, dev: ("int8", None))
+    load, _ = _loader_for(graph, TRANSCRIBE)
+    load.settings.device = device
+    load.ports["model"].set_value(place_model(model_file))
+    if expected is None:
+        with pytest.raises(RuntimeError, match="pick cpu or auto as the Device"):
+            load._execute(MagicMock())
+        assert fake_load == []
+        return
+    load._execute(MagicMock())
+    assert fake_load[0][1] == "cpu"
+    assert [w.message for w in load.wrapper.state.warnings] == [expected]
 
 
 def _loaded_tts(
